@@ -52,58 +52,74 @@ class ConversationalAIService:
 
     @staticmethod
     def generate_conversational_response(
-        user_message: str, conversation_history: List[Dict], session_context: Dict
+        user_message: str, conversation_history: List[Dict], context_data: Dict = None
     ) -> Dict:
         """
-        Generate a normal, friendly response while gathering medical info naturally.
-        This is the NORMAL MODE.
+        Generate a conversational response that properly extracts medical info
         """
-        system_prompt = """You are a friendly, empathetic healthcare assistant. Your goal is to:
-        1. Have a natural, comforting conversation about health concerns
-        2. Gently gather important medical information through normal conversation
-        3. Build trust and make the user feel heard
-        4. Giving some comments, sharing, empathy with patient
-        5. ONLY offer medical analysis when the user clearly wants it and we have enough info
-
-        Gather information naturally by asking follow-up questions like:
-        - "How long have you been experiencing this?"
-        - "Can you describe what the pain feels like?"
-        - "Have you taken any medication for this?"
-        - "Is there anything that makes it better or worse?"
-
-        IMPORTANT RULES:
-        - Don't sound like a questionnaire! Be conversational
-        - Only offer analysis when: 
-          * User directly asks for medical advice AND
-          * We have specific symptoms + duration + severity info
-        - If offering analysis, say: "Based on what you've told me, I can analyze your symptoms and provide some guidance. Would you like me to do that?"
+        system_prompt = """You are a medical assistant gathering information. Your goal is to:
+        1. Extract key medical information (symptoms, duration, severity, medications, conditions)
+        2. Ask clarifying questions when information is missing
+        3. Determine when you have enough information to offer medical analysis
+        4. Respond conversationally and empathetically
 
         Return JSON with:
+        - response: string (the conversational reply)
+        - update_context: object (any extracted medical info)
+        - should_offer_analysis: boolean (true when you have enough info)
+
+        Example:
         {
-            "response": "your conversational response",
-            "update_context": {"symptom": "headache", "duration": "2 days"} OR {},
+            "response": "I understand you're experiencing headache. How long has this been going on?",
+            "update_context": {"symptoms": "headache"},
             "should_offer_analysis": false
-        }"""
+        }
+        """
 
-        # Build conversation context
-        history_text = "\n".join(
-            [
-                f"{msg['role']}: {msg['content']}"
-                for msg in conversation_history[-6:]  # Last 6 messages
-            ]
-        )
+        user_context = f"Current conversation:\n"
+        for msg in conversation_history[-6:]:  # Last 6 messages for context
+            user_context += f"{msg['role']}: {msg['content']}\n"
 
-        current_context = (
-            f"Current known context: {session_context}\n\n" if session_context else ""
-        )
+        user_context += f"\nUser's latest message: {user_message}"
 
-        user_prompt = f"{current_context}Conversation history:\n{history_text}\n\nUser: {user_message}"
-        message = [
+        if context_data:
+            user_context += f"\nKnown context: {context_data}"
+
+        messages = [
             {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt},
+            {"role": "user", "content": user_context},
         ]
 
-        return require_json_with_retry(message)  # Pass the function, not the list
+        try:
+            response = require_json_with_retry(messages)
+
+            # Ensure response has the correct structure
+            if isinstance(response, dict):
+                return {
+                    "response": response.get(
+                        "response",
+                        "I'm here to help. Could you tell me more about what you're experiencing?",
+                    ),
+                    "update_context": response.get("update_context", {}),
+                    "should_offer_analysis": response.get(
+                        "should_offer_analysis", False
+                    ),
+                }
+            else:
+                # Fallback if LLM doesn't return proper JSON
+                return {
+                    "response": "I'm here to help with your health concerns. Could you tell me more about what you're experiencing?",
+                    "update_context": {},
+                    "should_offer_analysis": False,
+                }
+
+        except Exception as e:
+            print(f"❌ Conversational AI error: {e}")
+            return {
+                "response": "I'm here to help. Could you describe what you're feeling?",
+                "update_context": {},
+                "should_offer_analysis": False,
+            }
 
     @staticmethod
     def extract_medical_context_from_conversation(
