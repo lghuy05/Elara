@@ -7,6 +7,7 @@ from app.schemas.schemas import (
     SymptomInput,
     SymptomIntensityCreate,
 )
+
 from app.services.fhir_service import FHIRService
 from app.services.triage_service import triage_rules
 from app.services.llm_service import require_json_with_retry
@@ -37,12 +38,14 @@ def enhanced_advice_with_ehr(
         .first()
     )
 
+    zipcode = db.query(User).filter(User.id == current_user.id).first()
+
     if not mapping:
         mapping = UserFHIRMapping(user_id=current_user.id, fhir_patient_id="example")
         db.add(mapping)
         db.commit()
         print(f"Mapped user {current_user.id} to mock patient")
-    ehr_data = FHIRService.get_patient_profile(mapping.fhir_patient_id)
+    ehr_data = FHIRService.get_patient_profile(mapping.fhir_patient_id, zipcode)
 
     # 1. Triage first (safety check)
     triage = triage_rules(inp.symptoms)

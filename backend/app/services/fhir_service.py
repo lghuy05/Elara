@@ -26,7 +26,7 @@ class FHIRService:
             return 30
 
     @staticmethod
-    def get_patient_profile(patient_id: str) -> Optional[Dict]:
+    def get_patient_profile(patient_id: str, zipcode: str) -> Optional[Dict]:
         """Get comprehensive patient profile for display with REAL FHIR data but mock zipcode"""
         # Always use real FHIR data, but fallback to mock if needed
         try:
@@ -72,7 +72,7 @@ class FHIRService:
                 "active_medications": FHIRService._extract_medications(medications),
                 "medical_conditions": FHIRService._extract_conditions(conditions),
                 "last_updated": datetime.now().isoformat(),
-                "zipcode": "33620",  # ALWAYS USE MOCK ZIPCODE
+                "zipcode": zipcode,  # ALWAYS USE MOCK ZIPCODE
             }
 
             print(f"✅ REAL FHIR data fetched for patient: {profile['name']}")
