@@ -1,4 +1,4 @@
-// app/(drawer)/index.tsx - FIXED VERSION
+// app/(drawer)/chat.tsx - UPDATED VERSION (No Healthcare Recommendations)
 import { useState, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
@@ -14,9 +14,7 @@ import {
   ChatMessage,
   AIResponse,
   AIReminderSuggestion,
-  HealthcareRecommendations
 } from '../../hooks/useChatStore';
-import HealthcareProvidersCard from '../../components/HealthcareProvidersCard';
 
 interface CustomReminderData {
   title: string;
@@ -152,12 +150,14 @@ export default function ChatIntroScreen() {
       setMessage('');
     }
   };
+
   const handleKeyPress = (e: any) => {
     if (e.nativeEvent.key === 'Enter' && !e.nativeEvent.shiftKey) {
-      e.preventDefault(); // Prevent default behavior
-      send(); // Call your send function
+      e.preventDefault();
+      send();
     }
   };
+
   const handleAcceptAnalysis = async () => {
     if (!currentSessionId) {
       Alert.alert('Error', 'No active chat session');
@@ -403,7 +403,7 @@ export default function ChatIntroScreen() {
     }
   };
 
-  // Enhanced chat message renderer
+  // Enhanced chat message renderer (REMOVED HealthcareProvidersCard)
   const renderChatMessage = (chat: ChatMessage) => (
     <View key={chat.id} style={chatStyles.messageContainer}>
       {/* User Message */}
@@ -550,12 +550,7 @@ export default function ChatIntroScreen() {
             </View>
           )}
 
-          {/* Healthcare Recommendations */}
-          {chat.aiResponse.healthcare_recommendations && (
-            <HealthcareProvidersCard
-              recommendations={chat.aiResponse.healthcare_recommendations}
-            />
-          )}
+          {/* REMOVED: Healthcare Recommendations Section */}
         </View>
       </View>
     </View>
@@ -576,11 +571,11 @@ export default function ChatIntroScreen() {
             <Text style={chatStyles.menuText}>☰</Text>
           </TouchableOpacity>
 
-          <Text style={chatStyles.title}>AI Doctor</Text>
+          <Text style={chatStyles.title}>Elara</Text>
 
           <TouchableOpacity
             style={chatStyles.clearButton}
-            onPress={clearCurrentSession} // Store handles both session and ID
+            onPress={clearCurrentSession}
           >
             <Text style={chatStyles.clearButtonText}>Clear</Text>
           </TouchableOpacity>
@@ -594,7 +589,7 @@ export default function ChatIntroScreen() {
         >
           {currentSession.length === 0 && (
             <View style={[chatStyles.card, chatStyles.welcomeCard]}>
-              <Text style={chatStyles.welcomeTitle}>👋 Welcome to AI Doctor</Text>
+              <Text style={chatStyles.welcomeTitle}>👋 Welcome to Elara</Text>
               <Text style={chatStyles.welcomeText}>
                 Describe your symptoms and get personalized medical advice based on your health profile.
                 I'll help you understand possible conditions and provide at-home care guidance.
@@ -614,9 +609,7 @@ export default function ChatIntroScreen() {
 
         {/* Input Bar */}
         <View style={chatStyles.inputBar}>
-
           <TextInput
-
             style={[
               chatStyles.input,
               !patientProfile && chatStyles.inputWarning

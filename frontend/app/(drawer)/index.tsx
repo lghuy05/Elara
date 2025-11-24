@@ -14,8 +14,8 @@ export default function Homepage() {
   const features = [
     {
       icon: '🧠',
-      title: 'AI Medical Assistant',
-      description: 'Get personalized medical advice from our AI doctor, powered by the latest medical research and clinical guidelines. Includes symptom analysis and 24/7 support.',
+      title: 'Elara',
+      description: 'Get personalized medical advice from Elara, powered by the latest medical research and clinical guidelines. Includes symptom analysis and 24/7 support.',
       highlight: 'RAG Research + AI Doctor + Symptom Analysis',
       color: '#EFF6FF',
       bgColor: '#3B82F6',
@@ -51,7 +51,7 @@ export default function Homepage() {
     {
       icon: '💬',
       title: 'Chat Now',
-      subtitle: 'Talk to AI Doctor',
+      subtitle: 'Talk to Elara',
       color: colors.primary.blue,
       bgColor: colors.background.blue,
       route: '/(drawer)/chat'
@@ -101,7 +101,7 @@ export default function Homepage() {
         </TouchableOpacity>
 
         <View style={homepageStyles.heroContent}>
-          <Text style={homepageStyles.heroTitle}>Health AI Companion</Text>
+          <Text style={homepageStyles.heroTitle}>Elara</Text>
           <Text style={homepageStyles.heroSubtitle}>
             Your intelligent medical assistant powered by advanced AI
           </Text>

@@ -294,7 +294,6 @@ class HealthcareRecommendations(BaseModel):
 
 class EnhancedAdviceOutWithReminders(EnhancedAdviceOut):
     ai_reminder_suggestions: List[AIReminderSuggestion] = []
-    healthcare_recommendations: Optional[HealthcareRecommendations] = None
 
 
 class ChatMessageBase(BaseModel):
@@ -347,3 +346,16 @@ class ChatResponse(BaseModel):
     message: ChatMessageResponse
     requires_analysis: bool = False
     analysis_prompt: Optional[str] = None
+
+
+class HealthcareRecommendationsRequest(BaseModel):
+    symptoms: str
+    specialty: Optional[str] = None
+    max_results: Optional[int] = 5
+
+
+class HealthcareRecommendations(BaseModel):
+    providers: List[HealthcareProvider]
+    recommendation_reason: str
+    provider_type: str
+    user_location: str

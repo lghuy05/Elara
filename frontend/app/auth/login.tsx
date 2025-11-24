@@ -69,7 +69,7 @@ export default function LoginScreen() {
       <ScrollView style={authStyles.scrollView} showsVerticalScrollIndicator={false}>
         {/* Hero Section */}
         <View style={authStyles.hero}>
-          <Text style={authStyles.heroTitle}>Health AI Companion</Text>
+          <Text style={authStyles.heroTitle}>Elara</Text>
           <Text style={authStyles.heroSubtitle}>
             Your intelligent medical assistant powered by AI
           </Text>
@@ -139,7 +139,7 @@ export default function LoginScreen() {
           <View style={authStyles.featuresGrid}>
             <View style={authStyles.featureItem}>
               <Text style={authStyles.featureIcon}>🧠</Text>
-              <Text style={authStyles.featureLabel}>AI Doctor</Text>
+              <Text style={authStyles.featureLabel}>Elara</Text>
             </View>
             <View style={authStyles.featureItem}>
               <Text style={authStyles.featureIcon}>📊</Text>

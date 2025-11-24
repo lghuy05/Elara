@@ -18,9 +18,11 @@ export const getToken = async (): Promise<string | null> => {
     const verified_token = await api.post('/auth/verify', { token });
     if (verified_token.data.valid) {
       console.log("Token valid", verified_token.data.user);
-      return "yes";
+      return token;
     }
     else {
+      console.log("Invalid Token");
+      await removeToken();
       return null;
     }
   }

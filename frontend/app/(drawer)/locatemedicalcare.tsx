@@ -1,97 +1,112 @@
-import { View, Platform, ScrollView, KeyboardAvoidingView, ActivityIndicator, SafeAreaView, Text, TouchableOpacity, TextInput } from 'react-native'
-import { router, useNavigation } from 'expo-router'
-import { useState } from 'react'
+// Update locatemedicalcare.tsx
+import { useState } from 'react';
+import { View, Text, TouchableOpacity, TextInput, ScrollView, ActivityIndicator } from 'react-native';
+import { router, useNavigation } from 'expo-router';
 import { locateMedicalCareStyles } from '../styles/locatemedicalcare';
+
+interface Provider {
+  name: string;
+  address: string;
+  phone?: string;
+  website?: string;
+  rating?: number;
+  distance_km?: number;
+  google_maps_url: string;
+}
+
+interface HealthcareRecommendation {
+  providers: Provider[];
+  recommendation_reason: string;
+  provider_type: string;
+  user_location: string;
+}
 
 export default function LocateMedicalCare() {
   const navigation = useNavigation();
-  const [isLoading, setisLoading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [message, setMessage] = useState<string>('');
-  const send = () => {
-    console.log("Pressed");
-  }
+  const [recommendations, setRecommendations] = useState<HealthcareRecommendation | null>(null);
+
+  const searchHealthcare = async () => {
+    if (!message.trim()) return;
+
+    setIsLoading(true);
+    setRecommendations(null);
+
+    try {
+      const response = await fetch('http://your-backend-url/healthcare-recommendations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${your_auth_token}`,
+        },
+        body: JSON.stringify({
+          symptoms: message,
+          max_results: 5
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setRecommendations(data);
+      } else {
+        console.error('Search failed:', response.status);
+        // Handle error
+      }
+    } catch (error) {
+      console.error('Search error:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const openMaps = (provider: Provider) => {
+    // Open Google Maps with provider location
+    // Implementation depends on your maps integration
+  };
+
   return (
-    <SafeAreaView style={locateMedicalCareStyles.safeArea}>
-      <KeyboardAvoidingView
-        behavior={Platform.select({ ios: 'padding', android: undefined })}
-        style={locateMedicalCareStyles.container}
-      >
-        <View style={locateMedicalCareStyles.headerRow}>
-          <TouchableOpacity
-            style={locateMedicalCareStyles.menuButton}
-            onPress={() => navigation.dispatch({ type: 'OPEN_DRAWER' } as any)}
-          >
-            <Text style={locateMedicalCareStyles.menuText}>☰</Text>
-          </TouchableOpacity>
-          <Text style={locateMedicalCareStyles.title}>Find healthcare</Text>
-          <View style={locateMedicalCareStyles.clearButton}>
-            <Text style={locateMedicalCareStyles.clearButtonText}></Text>
-          </View>
-        </View>
+    <ScrollView style={locateMedicalCareStyles.container}>
+      {/* Header and input remain the same */}
 
-        <ScrollView
-          style={locateMedicalCareStyles.scrollView}
-          contentContainerStyle={locateMedicalCareStyles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
-          {/* Welcome Card */}
-          <View style={[locateMedicalCareStyles.card, locateMedicalCareStyles.welcomeCard]}>
-            <Text style={locateMedicalCareStyles.welcomeTitle}>📍 Find Healthcare</Text>
-            <Text style={locateMedicalCareStyles.welcomeText}>
-              Tell us what kind of healthcare service you're looking for.
-              We'll help you find nearby providers, clinics, and specialists.
-            </Text>
-          </View>
+      {/* Results Section */}
+      <View style={locateMedicalCareStyles.resultsSection}>
+        {isLoading && <ActivityIndicator size="large" color="#10B981" />}
 
-          {/* Search Tips Card */}
-          <View style={[locateMedicalCareStyles.card, locateMedicalCareStyles.searchCard]}>
-            <Text style={locateMedicalCareStyles.searchTitle}>💡 Search Tips</Text>
-            <Text style={locateMedicalCareStyles.welcomeText}>
-              Try searching for:
+        {recommendations && (
+          <View style={locateMedicalCareStyles.recommendationsCard}>
+            <Text style={locateMedicalCareStyles.recommendationReason}>
+              {recommendations.recommendation_reason}
             </Text>
-            <View style={locateMedicalCareStyles.searchTips}>
-              <Text style={locateMedicalCareStyles.searchTip}>• "Emergency room near me"</Text>
-              <Text style={locateMedicalCareStyles.searchTip}>• "Cardiologist in [city]"</Text>
-              <Text style={locateMedicalCareStyles.searchTip}>• "24/7 urgent care"</Text>
-              <Text style={locateMedicalCareStyles.searchTip}>• "Dentist accepting new patients"</Text>
-            </View>
-          </View>
 
-          {/* Results Area */}
-          <View style={[locateMedicalCareStyles.card, locateMedicalCareStyles.resultsCard]}>
-            <Text style={locateMedicalCareStyles.resultsPlaceholder}>
-              {message ? `Searching for: "${message}"` : 'Your search results will appear here...'}
-            </Text>
-            {isLoading && <ActivityIndicator size="large" color="#10B981" style={{ marginTop: 16 }} />}
+            {recommendations.providers.map((provider, index) => (
+              <View key={index} style={locateMedicalCareStyles.providerCard}>
+                <Text style={locateMedicalCareStyles.providerName}>{provider.name}</Text>
+                <Text style={locateMedicalCareStyles.providerAddress}>{provider.address}</Text>
+                {provider.phone && (
+                  <Text style={locateMedicalCareStyles.providerPhone}>📞 {provider.phone}</Text>
+                )}
+                {provider.rating && (
+                  <Text style={locateMedicalCareStyles.providerRating}>
+                    ⭐ {provider.rating} ({provider.total_ratings || 0} reviews)
+                  </Text>
+                )}
+                {provider.distance_km && (
+                  <Text style={locateMedicalCareStyles.providerDistance}>
+                    📍 {provider.distance_km} km away
+                  </Text>
+                )}
+                <TouchableOpacity
+                  style={locateMedicalCareStyles.directionsButton}
+                  onPress={() => openMaps(provider)}
+                >
+                  <Text style={locateMedicalCareStyles.directionsButtonText}>Get Directions</Text>
+                </TouchableOpacity>
+              </View>
+            ))}
           </View>
-        </ScrollView>
-
-        <View style={locateMedicalCareStyles.inputBar}>
-          <TextInput
-            style={locateMedicalCareStyles.input}
-            placeholder='Please enter what kind of healthcare you need!'
-            value={message}
-            onChangeText={setMessage}
-            onSubmitEditing={send}
-            placeholderTextColor="#9AA5B1"
-            editable={!isLoading}
-            returnKeyType="search"
-            multiline
-            maxLength={500}
-          />
-          <TouchableOpacity
-            style={[locateMedicalCareStyles.sendBtn,
-            isLoading && locateMedicalCareStyles.sendBtnDisabled]}
-            onPress={send}
-            disabled={isLoading || !message.trim()}
-          >
-            <Text style={locateMedicalCareStyles.sendBtnText}
-            >
-              {isLoading ? '...' : 'Search'}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
-  )
+        )}
+      </View>
+    </ScrollView>
+  );
 }

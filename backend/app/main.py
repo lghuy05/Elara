@@ -148,6 +148,15 @@ try:
 except ImportError as e:
     print(f"Chat not available: {e}")
 
+# app/main.py - Add the new router
+try:
+    from app.routes.healthcare_recommendations import router as healthcare_router
+
+    app.include_router(healthcare_router)
+    print("✅ Healthcare recommendation routes registered")
+except ImportError as e:
+    print(f"Healthcare recommendation routes not available: {e}")
+
 
 @app.get("/")
 async def root():

@@ -53,7 +53,7 @@ function CustomDrawerContent() {
   return (
     <View style={{ flex: 1, paddingTop: 60, backgroundColor: '#fff' }}>
       <View style={{ padding: 20, borderBottomWidth: 1, borderBottomColor: '#f0f0f0' }}>
-        <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#0F131A' }}>Health App</Text>
+        <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#0F131A' }}>Dashboard</Text>
         <Text style={{ fontSize: 14, color: '#64748B', marginTop: 4 }}>Your Medical Companion</Text>
       </View>
 
