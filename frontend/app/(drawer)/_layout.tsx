@@ -21,33 +21,16 @@ function CustomDrawerContent() {
   const handleLogout = async () => {
     console.log('🟡 Logout button pressed');
 
-    Alert.alert(
-      'Logout',
-      'Are you sure you want to logout?',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-          onPress: () => console.log('🟡 Logout cancelled')
-        },
-        {
-          text: 'Logout',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              console.log('🟡 Logout confirmed - starting process');
-              clearPatientProfile();
-              await logout();
-              console.log('✅ Logout completed successfully');
-            } catch (error) {
-              console.error('❌ Logout error:', error);
-              // Force redirect even if there's an error
-              router.replace('/auth/login');
-            }
-          }
-        }
-      ]
-    );
+    try {
+      console.log('🟡 Logout confirmed - starting process');
+      clearPatientProfile();
+      await logout();
+      console.log('✅ Logout completed successfully');
+    } catch (error) {
+      console.error('❌ Logout error:', error);
+      // Force redirect even if there's an error
+      router.replace('/auth/login');
+    }
   };
 
   return (
