@@ -4,7 +4,7 @@ import os
 
 class PineconeService:
     def __init__(self):
-        self.api_key = "pcsk_5cfNae_Dp4qugArHYBju1W3uvNEtaudVy8ccr8433nV3Qkc56Da9bNhYhnqGFFXzX6Lnno"
+        self.api_key = os.getenv("PINECONE_API_KEY")
         self.index_name = "medical-knowledge"
 
         try:
