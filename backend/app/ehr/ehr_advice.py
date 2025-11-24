@@ -90,7 +90,7 @@ def enhanced_advice_with_ehr(
         "- ai_reminder_suggestions: array of objects with these EXACT fields:\n"
         "  * reminder_title: string (REQUIRED)\n"
         "  * reminder_description: string (REQUIRED)\n"
-        "  * suggested_time: string (required, format like '08:00' or 'morning')\n"
+        "  * suggested_time: string (required, suggest reasonable time,  format like '08:00' or '21:00')\n"
         "  * suggested_frequency: string (required, like 'daily', 'weekly')\n"
         "  * priority: string (REQUIRED, must be 'low', 'medium', or 'high')\n\n"
         "IMPORTANT RULES FOR JSON FORMAT:\n"

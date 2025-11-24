@@ -684,7 +684,7 @@ export default function ChatIntroScreen() {
           <View style={chatStyles.reminderPopup}>
             <View style={chatStyles.reminderPopupContent}>
               <Text style={chatStyles.reminderPopupTitle}>
-                💡 AI Reminder Suggestions
+                💡 Elara Suggestions
               </Text>
               <Text style={chatStyles.reminderPopupSubtitle}>
                 Based on your symptoms, here are some helpful reminders. Customize them below:

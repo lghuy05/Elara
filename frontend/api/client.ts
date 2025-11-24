@@ -17,19 +17,18 @@ const api = axios.create({
 api.interceptors.request.use(
   async (config) => {
     console.log(`🟡 Making ${config.method?.toUpperCase()} request to: ${config.url}`);
-    if (config.url?.includes('/auth/')) {
-      return config;
-    }
-    try {
-      const token = await getToken();
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-        console.log('✅ Token added to request');
+    const isAuthEndpoint = config.url?.includes('/auth/');
+    if (!isAuthEndpoint) {
+      try {
+        const token = await getToken();
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+          console.log('✅ Token added to request');
+        }
+      } catch (error) {
+        console.error('❌ Error adding token to request:', error);
       }
-    } catch (error) {
-      console.error('❌ Error adding token to request:', error);
     }
-
     if (config.data) {
       console.log('📤 Request payload:', JSON.stringify(config.data, null, 2));
     }
