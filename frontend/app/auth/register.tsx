@@ -24,12 +24,14 @@ export default function RegisterScreen() {
   const [age, setAge] = useState<string>('');
   const [sex, setSex] = useState<string>('');
   const [role, setRole] = useState<string>('');
+  const [zipcode, setZipcode] = useState<string>(''); // 🔥 NEW: Zipcode state
   const [loading, setLoading] = useState<boolean>(false);
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
 
   const passwordsMatch = password === confirmPassword;
   const isAgeValid = age !== '' && !isNaN(Number(age)) && Number(age) > 0 && Number(age) < 120;
-  const canSubmit = username && email && /.+@.+\..+/.test(email) && password.length >= 6 && passwordsMatch && isAgeValid && sex && role;
+  const isZipcodeValid = zipcode.trim().length >= 5;
+  const canSubmit = username && email && /.+@.+\..+/.test(email) && password.length >= 6 && passwordsMatch && isAgeValid && sex && role && isZipcodeValid; // 🔥 UPDATED: Added zipcode validation
 
   const handleRegister = async () => {
     if (!canSubmit || loading) return;
@@ -44,6 +46,7 @@ export default function RegisterScreen() {
         age: parseInt(age),
         sex: sex,
         role: role,
+        zipcode: zipcode.trim(), // 🔥 NEW: Send zipcode to backend
       });
 
       Alert.alert('Success', 'Account created successfully! Please login.');
@@ -129,6 +132,27 @@ export default function RegisterScreen() {
             keyboardType="numeric"
             placeholderTextColor="#9AA5B1"
           />
+
+          {/* 🔥 NEW: Zipcode Input */}
+          <TextInput
+            style={[
+              authStyles.input,
+              focusedInput === 'zipcode' && authStyles.inputFocused,
+              !isZipcodeValid && zipcode !== '' && authStyles.inputError
+            ]}
+            placeholder="Zipcode (e.g., 12345 or 12345-6789)"
+            value={zipcode}
+            onChangeText={setZipcode}
+            onFocus={() => setFocusedInput('zipcode')}
+            onBlur={() => setFocusedInput(null)}
+            keyboardType="default"
+            placeholderTextColor="#9AA5B1"
+            maxLength={10} // Allows for 12345 or 12345-6789
+          />
+
+          {!isZipcodeValid && zipcode !== '' && (
+            <Text style={authStyles.errorText}>Please enter a valid zipcode (5 or 9 digits)</Text>
+          )}
 
           <View style={authStyles.genderContainer}>
             <Text style={authStyles.genderLabel}>Gender</Text>

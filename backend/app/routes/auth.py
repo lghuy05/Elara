@@ -74,6 +74,7 @@ def register(user_data: UserCreate, db: db_dependency):
             age=user_data.age,
             sex=user_data.sex,
             role=user_data.role,
+            zipcode=user_data.zipcode,
         )
         db.add(db_user)
         db.commit()

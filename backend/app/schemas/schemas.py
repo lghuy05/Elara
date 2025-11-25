@@ -20,6 +20,7 @@ class UserCreate(BaseModel):
     age: int
     sex: str
     role: str = Field(..., description="User role: patient or clinician")
+    zipcode: str
 
 
 class UserLogin(BaseModel):
