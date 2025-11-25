@@ -28,6 +28,7 @@ class User(Base):
     sex = Column(String)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     role = Column(String, default="patient")
+    zipcode = Column(String)
     chat_sessions = relationship("ChatSession", back_populates="user")
     fhir_mapping = relationship("UserFHIRMapping", back_populates="user", uselist=False)
     symptom_intensities = relationship("SymptomIntensity", back_populates="user")

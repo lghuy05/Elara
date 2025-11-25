@@ -46,7 +46,7 @@ export default function RegisterScreen() {
         age: parseInt(age),
         sex: sex,
         role: role,
-        zipcode: zipcode.trim(), // 🔥 NEW: Send zipcode to backend
+        zipcode: zipcode, // 🔥 NEW: Send zipcode to backend
       });
 
       Alert.alert('Success', 'Account created successfully! Please login.');
