@@ -48,11 +48,6 @@ def enhanced_advice_with_ehr(
 
     ehr_data = FHIRService.get_patient_profile(mapping.fhir_patient_id, user.zipcode)
 
-    # 1. Triage first (safety check)
-    triage = triage_rules(inp.symptoms)
-    if triage.risk == "emergency":
-        raise HTTPException(400, "Possible emergency. Call emergency services now.")
-
     # 2. Get medical context (synchronous - no await needed)
     try:
         medical_context = get_medical_context(inp.symptoms, min_results=2)

@@ -4,7 +4,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from datetime import timedelta
 from app.database.database import get_db
-from app.database.models import User
+from app.database.models import User, UserFHIRMapping
 from app.schemas.schemas import (
     UserCreate,
     UserLogin,
@@ -79,6 +79,13 @@ def register(user_data: UserCreate, db: db_dependency):
         db.add(db_user)
         db.commit()
         db.refresh(db_user)
+        user = db.query(User).filter(User.username == user_data.username).first()
+
+        new_mapping = UserFHIRMapping(user_id=user.id, fhir_patient_id="example")
+        db.add(new_mapping)
+        db.commit()
+        db.refresh(new_mapping)
+
         print(f"✅ User created: {db_user.username}")
 
         access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)

@@ -34,7 +34,9 @@ def get_healthcare_recommendations(
         .filter(UserFHIRMapping.user_id == current_user.id)
         .first()
     )
+
     user = db.query(User).filter(User.id == current_user.id).first()
+
     if not mapping:
         raise HTTPException(404, "User EHR mapping not found")
 
