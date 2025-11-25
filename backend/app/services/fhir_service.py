@@ -26,7 +26,7 @@ class FHIRService:
             return 30
 
     @staticmethod
-    def get_patient_profile(patient_id: str, zipcode: str) -> Optional[Dict]:
+    def get_patient_profile(patient_id: str, zipcode: str = None) -> Optional[Dict]:
         """Get comprehensive patient profile for display with REAL FHIR data but mock zipcode"""
         # Always use real FHIR data, but fallback to mock if needed
         try:
