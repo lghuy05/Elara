@@ -1,210 +1,78 @@
-# 🩺 AI Doctor App  
-**GDG Mentorship Project • AI-powered Primary Care Companion**
+# 🩺 Elara
 
-A mobile-first healthcare assistant built with **React Native (Expo)** and **FastAPI**, designed to provide:
-- At-home care suggestions (non-diagnostic)  
-- Clinician-reviewed specialist referrals  
-- Clinician-only prescription drafts  
-- Safety-first design: JSON-only LLM responses, triage validation, and audit logging  
+<div align="center">
 
----
+**Your Intelligent Medical Assistant Powered by Advanced AI**
 
-## 🧠 Objective
-The goal of the **AI Doctor App** is to empower patients with safe, responsible, AI-guided triage and health suggestions — while supporting clinicians through explainable AI workflows.  
-This project is part of the **Google Developer Group (GDG) Mentorship Program**, developed as a capstone for the Fall 2025 cycle.
+[![React Native](https://img.shields.io/badge/React%20Native-0.72-blue?style=for-the-badge&logo=react)](https://reactnative.dev/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.112-green?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-18-blue?style=for-the-badge&logo=postgresql)](https://www.postgresql.org/)
+[![Pinecone](https://img.shields.io/badge/Pinecone-Vector%20DB-orange?style=for-the-badge)](https://www.pinecone.io/)
 
----
+</div>
 
-## 🔗 GitHub Repository
-**Repo:** [AI-Doctor-App](https://github.com/joebrashear31/AI-Doctor-App)
+## 📖 Overview
 
----
+Health AI Companion is a comprehensive mobile health application that combines artificial intelligence with medical research to provide personalized healthcare guidance. The app serves as your 24/7 AI health partner, offering symptom analysis, medical advice, health tracking, and healthcare provider recommendations.
 
-## 🏗 Architecture Overview
+## ✨ Features
+![img alt](https://github.com/lghuy05/Elara/blob/552e3217928c63c10e2f8532fde9e3a2abbdcf54/img/1.png)
+![img alt](https://github.com/lghuy05/Elara/blob/552e3217928c63c10e2f8532fde9e3a2abbdcf54/img/2.png)
+![img alt](https://github.com/lghuy05/Elara/blob/552e3217928c63c10e2f8532fde9e3a2abbdcf54/img/3.png)
+![img alt](https://github.com/lghuy05/Elara/blob/552e3217928c63c10e2f8532fde9e3a2abbdcf54/img/4.png)
+![img alt](https://github.com/lghuy05/Elara/blob/552e3217928c63c10e2f8532fde9e3a2abbdcf54/img/5.png)
+![img alt](https://github.com/lghuy05/Elara/blob/552e3217928c63c10e2f8532fde9e3a2abbdcf54/img/6.png)
+![img alt](https://github.com/lghuy05/Elara/blob/552e3217928c63c10e2f8532fde9e3a2abbdcf54/img/7.png)
+![img alt](https://github.com/lghuy05/Elara/blob/552e3217928c63c10e2f8532fde9e3a2abbdcf54/img/8.png)
+![img alt](https://github.com/lghuy05/Elara/blob/552e3217928c63c10e2f8532fde9e3a2abbdcf54/img/13.png)
+![img alt](https://github.com/lghuy05/Elara/blob/552e3217928c63c10e2f8532fde9e3a2abbdcf54/img/10.png)
+![img alt](https://github.com/lghuy05/Elara/blob/552e3217928c63c10e2f8532fde9e3a2abbdcf54/img/14.png)
+![img alt](https://github.com/lghuy05/Elara/blob/552e3217928c63c10e2f8532fde9e3a2abbdcf54/img/11.png)
+![img alt](https://github.com/lghuy05/Elara/blob/552e3217928c63c10e2f8532fde9e3a2abbdcf54/img/12.png)
 
-| Layer | Tech Stack | Purpose |
-|-------|------------|---------|
-| **Frontend** | Expo (React Native SDK 52), Expo Router | Patient-facing app with symptom input, triage, and advice chat |
-| **Backend** | FastAPI (Python, Dockerized) | Exposes secure API routes and enforces LLM JSON output guardrails |
-| **LLM Provider** | OpenRouter (Meta Llama 3.3 70B Instruct) / Ollama local option | Natural language processing and medical context generation |
-| **Deployment** | Docker + Azure / AWS / GCP | Cloud hosting and CI/CD ready |
-| **Safety** | Red-flag triage, JSON repair, medication filter | Prevents unsafe or incomplete AI outputs |
+### 🤖 AI Medical Assistant
+- **Natural Language Chat**: Describe symptoms in conversational language
+- **Symptom Analysis**: AI-powered assessment with severity ratings
+- **Condition Suggestions**: Possible conditions based on symptom patterns
+- **Personalized Care Plans**: Step-by-step home care recommendations
 
----
+### 📊 Health Analytics & Tracking
+- **Symptom Intensity Charts**: Visualize symptom trends over time
+- **Multi-Symptom Comparison**: Track multiple symptoms simultaneously
+- **Frequency Distribution**: Analyze most common symptoms and patterns
+- **Progress Monitoring**: Monitor health improvements with interactive charts
 
-## 🚀 Getting Started
+### 📍 Medical Care Locator
+- **Nearby Providers**: Find healthcare professionals in your area
+- **Provider Ratings**: View ratings and reviews from other patients
+- **One-Touch Actions**: Direct calling and map integration
+- **Specialized Recommendations**: AI-suggested providers based on symptoms
 
-### 1️⃣ Clone the Repository
-```bash
-git clone https://github.com/joebrashear31/AI-Doctor-App.git
-cd AI-Doctor-App
-```
+### ⏰ Smart Reminders
+- **Medication Alerts**: Never miss a dose with intelligent scheduling
+- **Appointment Reminders**: Keep track of medical appointments
+- **Customizable Notifications**: Flexible reminder settings
 
-### 2️⃣ Backend Setup (FastAPI)
-```bash
-cd server
-cp .env.example .env
-# Add your API key and configuration to .env
-docker compose up --build
-```
+### 👤 Personal Health Profile
+- **EHR Integration**: Secure electronic health record storage
+- **Medication Management**: Track active prescriptions and dosages
+- **Personal Information**: Age, gender, contact details, and medical history
 
-Verify the backend:
-```bash
-curl http://localhost:8000/health
-# → {"ok": true}
-```
+## 🛠️ Tech Stack
 
-### 3️⃣ Frontend Setup (Expo)
-```bash
-cd ..
-npm install
-npx expo start
-```
+### Frontend
+- **React Native** - Cross-platform mobile development
+- **Deployment**: Vercel
 
-Run on:
-- **iOS simulator** → press `i`  
-- **Android emulator** → press `a`  
-- **Physical phone** → scan QR (Expo Go app)  
+### Backend
+- **FastAPI** - High-performance Python web framework
+- **Deployment**: Render
 
-> For real devices, update the `BASE_URL` in your API file to your LAN IP, e.g. `http://192.168.x.x:8000`
+### Database & Storage
+- **PostgreSQL** - Primary database (AWS RDS)
+- **Pinecone** - Vector database for RAG-enhanced medical research
 
----
+### Data Sources
+- **FHIR Standards** - Electronic Health Records integration
+- **Medical Research** - RAG-powered symptom analysis
 
-## ⚙️ Environment Variables (`server/.env`)
-```env
-OPENROUTER_API_KEY=or-xxxxxxxxxxxxxxxx
-MODEL=meta-llama/llama-3.3-70b-instruct:free
-APP_REFERER=http://localhost:8000
-APP_TITLE=AI Doctor App
-ALLOWED_ORIGINS=*
-# Optional for local inference
-OLLAMA_URL=http://host.docker.internal:11434
-```
-
----
-
-## 🔌 API Endpoints
-
-| Endpoint | Method | Description |
-|-----------|---------|-------------|
-| `/health` | GET | Check server status |
-| `/triage` | POST | Classifies risk level and red flags |
-| `/advice` | POST | Provides safe, at-home advice |
-| `/referrals` | POST | Suggests specialist referrals (clinician-only) |
-| `/rx_draft` | POST | Drafts prescription options (clinician-only) |
-
----
-
-## 🧩 Example API Response
-
-### `/advice`
-```json
-{
-  "advice": [
-    { "step": "Hydration", "details": "Drink small sips of water throughout the day." }
-  ],
-  "when_to_seek_care": ["High fever for more than 3 days", "Shortness of breath"],
-  "disclaimer": "This is not a diagnosis. Consult a physician if symptoms persist."
-}
-```
-
----
-
-## 🧱 Features & Safety
-
-- ✅ **Emergency triage** detection prevents unsafe advice  
-- ✅ **LLM JSON repair + retry** to avoid malformed responses  
-- ✅ **Medication instruction filters** for patient outputs  
-- ✅ **Clinician review layer** for all Rx & referral suggestions  
-- ✅ **Dockerized deployment** for fast setup and reproducibility  
-
----
-
-## 🌱 Possible Enhancements
-
-- ☁️ Host API in the cloud (GCP, AWS, or Azure)  
-- 🔐 Add clinician & patient authentication portals  
-- 🩺 Integrate EHR/FHIR APIs for verified patient data  
-- 📚 Implement RAG-based medical reference retrieval  
-- 📊 Add symptom tracking and analytics dashboards  
-- 🧾 Enforce HIPAA compliance and data encryption  
-- 💻 Switch to **Ollama** for local on-device inference  
-
----
-
-## 🗓 **Updated Project Timeline (GDG Mentorship – Oct to Nov 2025)**
-
-### **Week 1 (Oct 6 – Oct 12, 2025) – Cloud Backend & API Hosting**
-- Deploy the existing FastAPI backend to a cloud provider (Azure App Service, AWS ECS, or Google Cloud Run).  
-- Configure environment variables securely in the cloud environment.  
-- Verify health check and all `/triage`, `/advice`, `/referrals`, `/rx_draft` routes externally.  
-- Update React Native app `BASE_URL` to point to the hosted API.  
-
----
-
-### **Week 2 (Oct 13 – Oct 19, 2025) – Authentication & Access Control**
-- Implement clinician and patient login portals (JWT or Firebase Auth).  
-- Create user roles (`patient`, `clinician`) and secure routes accordingly.  
-- Add backend middleware to log all API requests by user role and timestamp.  
-- Add basic UI for login and account creation in Expo.  
-
----
-
-### **Week 3 (Oct 20 – Oct 26, 2025) – EHR Integration (FHIR API)**
-- Research and integrate public EHR API endpoints (Epic, Cerner, or Google Cloud Healthcare FHIR).  
-- Implement endpoints to pull anonymized or mock patient data for testing.  
-- Add environment variable toggles to enable or disable EHR sync.  
-- Ensure compliance with privacy standards (no PHI stored locally).  
-
----
-
-### **Week 4 (Oct 27 – Nov 2, 2025) – RAG Medical Knowledge Retrieval**
-- Implement Retrieval-Augmented Generation (RAG) pipeline using medical literature (e.g., PubMed, CDC).  
-- Host vector database (FAISS, Chroma, or Pinecone).  
-- Modify `/advice` endpoint to enrich LLM context with retrieved references.  
-- Test factual grounding improvements vs baseline responses.  
-
----
-
-### **Week 5 (Nov 3 – Nov 9, 2025) – Symptom Tracking & Analytics Dashboard**
-- Add frontend charts for tracking symptoms over time (React Native Charts or Recharts).  
-- Log user interactions and triage results in Firestore or local DB.  
-- Build a clinician dashboard for visualizing condition trends.  
-- Integrate optional push notifications or reminders.  
-
----
-
-### **Week 6 (Nov 10 – Nov 16, 2025) – Security, Compliance & On-Device LLM Support**
-- Implement encryption for stored health data and enforce consent flow.  
-- Add Terms of Use and Privacy Policy screens with acknowledgment tracking.  
-- Explore switching LLM provider from OpenRouter → Ollama for offline inference.  
-- Final mobile testing (iOS, Android, physical devices) and demo deployment.  
-- Prepare final presentation of project to mentor!  
-
----
-
-### **🎉 November 15th – GDG DevFest**
-
----
-
-### **🏁 November 17th – End of Semester**
-- Wrap-up and reflect with mentors.  
-- Maintain communication with mentors for ongoing feedback and research alignment.  
-
-
-
-## 🧑‍💻 Contributors
-**Project Lead:** [William J. Brashear](https://github.com/joebrashear31)  
-**Mentorship Program:** Google Developer Group (GDG) at the University of South Florida
-
----
-
-## ⚠️ Disclaimer
-This application is a **research and educational tool**, not a medical device.  
-It does **not** diagnose, treat, or replace clinical judgment. Always consult a licensed physician before acting on medical information.
-
----
-
-## 🏁 License
-MIT License © 2025 William J. Brashear  
-Open-source contributions welcome!
