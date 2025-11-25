@@ -72,7 +72,7 @@ class FHIRService:
                 "active_medications": FHIRService._extract_medications(medications),
                 "medical_conditions": FHIRService._extract_conditions(conditions),
                 "last_updated": datetime.now().isoformat(),
-                "zipcode": zipcode,  # ALWAYS USE MOCK ZIPCODE
+                "zipcode": zipcode,
             }
 
             print(f"✅ REAL FHIR data fetched for patient: {profile['name']}")

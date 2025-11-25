@@ -38,14 +38,15 @@ def enhanced_advice_with_ehr(
         .first()
     )
 
-    zipcode = db.query(User).filter(User.id == current_user.id).first()
+    user = db.query(User).filter(User.id == current_user.id).first()
 
     if not mapping:
         mapping = UserFHIRMapping(user_id=current_user.id, fhir_patient_id="example")
         db.add(mapping)
         db.commit()
         print(f"Mapped user {current_user.id} to mock patient")
-    ehr_data = FHIRService.get_patient_profile(mapping.fhir_patient_id, zipcode)
+
+    ehr_data = FHIRService.get_patient_profile(mapping.fhir_patient_id, user.zipcode)
 
     # 1. Triage first (safety check)
     triage = triage_rules(inp.symptoms)
