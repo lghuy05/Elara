@@ -34,11 +34,11 @@ def get_healthcare_recommendations(
         .filter(UserFHIRMapping.user_id == current_user.id)
         .first()
     )
-
+    user = db.query(User).filter(User.id == current_user.id).first()
     if not mapping:
         raise HTTPException(404, "User EHR mapping not found")
 
-    ehr_data = FHIRService.get_patient_profile(mapping.fhir_patient_id)
+    ehr_data = FHIRService.get_patient_profile(mapping.fhir_patient_id, user.zipcode)
     user_zipcode = ehr_data.get("zipcode")
 
     if not user_zipcode:

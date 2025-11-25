@@ -50,16 +50,6 @@ export default function ProfileScreen() {
     }
   };
 
-  const confirmLogout = () => {
-    Alert.alert(
-      'Logout',
-      'Are you sure you want to logout?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Logout', style: 'destructive', onPress: handleLogout }
-      ]
-    );
-  };
 
   if (isLoading && !patientProfile) {
     return (
@@ -265,7 +255,7 @@ export default function ProfileScreen() {
       )}
 
       {/* Logout Button */}
-      <TouchableOpacity style={profileStyles.logoutButton} onPress={confirmLogout}>
+      <TouchableOpacity style={profileStyles.logoutButton} onPress={handleLogout}>
         <Text style={profileStyles.logoutButtonText}>Logout</Text>
       </TouchableOpacity>
     </ScrollView>

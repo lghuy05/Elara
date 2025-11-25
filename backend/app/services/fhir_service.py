@@ -78,7 +78,7 @@ class FHIRService:
             print(f"✅ REAL FHIR data fetched for patient: {profile['name']}")
             print(f"   💊 Medications: {len(profile['active_medications'])}")
             print(f"   🩺 Conditions: {len(profile['medical_conditions'])}")
-            print(f"   📍 Zipcode: {profile['zipcode']} (mock)")
+            print(f"   📍 Zipcode: {profile['zipcode']}")
             return profile
 
         except Exception as e:
