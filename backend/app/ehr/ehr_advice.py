@@ -85,19 +85,10 @@ def enhanced_advice_with_ehr(
         "- advice: array of objects with 'step' and 'details' strings\n"
         "- when_to_seek_care: array of strings\n"
         "- disclaimer: string\n"
-        "- symptom_analysis: object with 'intensities' array and 'overall_severity' number\n"
-        "- ai_reminder_suggestions: array of objects with these EXACT fields:\n"
-        "  * reminder_title: string (REQUIRED)\n"
-        "  * reminder_description: string (REQUIRED)\n"
-        "  * suggested_time: string (required, suggest reasonable time,  format like '08:00' or '21:00')\n"
-        "  * suggested_frequency: string (required, like 'daily', 'weekly')\n"
-        "  * priority: string (REQUIRED, must be 'low', 'medium', or 'high')\n\n"
+        "- symptom_analysis: object with 'intensities' array and 'overall_severity' number\n\n"
         "IMPORTANT RULES FOR JSON FORMAT:\n"
         "1. Every field must be present, even if empty arrays/objects\n"
-        "2. All reminder objects MUST have 'reminder_title' and 'priority' at minimum\n"
-        "3. If you don't have a specific time, omit 'suggested_time' entirely\n"
-        "4. If you don't have frequency info, omit 'suggested_frequency' entirely\n"
-        "5. Do NOT include any fields not listed above\n\n"
+        "2. Do NOT include any fields not listed above\n\n"
         "Example of valid JSON format:\n"
         "{\n"
         '  "possible_diagnosis": ["Tension headache", "Migraine"],\n'
@@ -110,20 +101,7 @@ def enhanced_advice_with_ehr(
         '      {"symptom_name": "headache", "intensity": 7, "duration_minutes": 120, "notes": "Throbbing pain"}\n'
         "    ],\n"
         '    "overall_severity": 6\n'
-        "  },\n"
-        '  "ai_reminder_suggestions": [\n'
-        "    {\n"
-        '      "reminder_title": "Drink water",\n'
-        '      "reminder_description": "Small sips every 30 minutes",\n'
-        '      "suggested_time": "08:00",\n'
-        '      "suggested_frequency": "daily",\n'
-        '      "priority": "medium"\n'
-        "    },\n"
-        "    {\n"
-        '      "reminder_title": "Monitor symptoms",\n'
-        '      "priority": "high"\n'
-        "    }\n"
-        "  ]\n"
+        "  }\n"
         "}\n\n"
         "STRICTLY FOLLOW THIS JSON FORMAT. DO NOT DEVIATE."
     )
@@ -194,7 +172,6 @@ def enhanced_advice_with_ehr(
                 "when_to_seek_care": [],
                 "disclaimer": "This is not a diagnosis.",
                 "symptom_analysis": {"intensities": [], "overall_severity": None},
-                "ai_reminder_suggestions": [],
             },
         )
     except Exception as e:
@@ -213,7 +190,6 @@ def enhanced_advice_with_ehr(
             ],
             "disclaimer": "AI service temporarily unavailable",
             "symptom_analysis": {"intensities": [], "overall_severity": None},
-            "ai_reminder_suggestions": [],
         }
 
     print(f"🔍 LLM RESPONSE TYPE: {type(response)}")
@@ -236,7 +212,6 @@ def enhanced_advice_with_ehr(
             ],
             "disclaimer": "AI service temporarily unavailable",
             "symptom_analysis": {"intensities": [], "overall_severity": None},
-            "ai_reminder_suggestions": [],
         }
     elif "error" in response:
         print(f"❌ LLM returned error: {response}")
@@ -248,8 +223,9 @@ def enhanced_advice_with_ehr(
             "when_to_seek_care": ["Seek immediate care for emergency symptoms"],
             "disclaimer": "Analysis service issue",
             "symptom_analysis": {"intensities": [], "overall_severity": None},
-            "ai_reminder_suggestions": [],
         }
+
+    response.setdefault("ai_reminder_suggestions", [])
 
     symptom_intensities_to_store = []
 

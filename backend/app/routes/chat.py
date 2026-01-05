@@ -170,6 +170,38 @@ async def analyze_chat_session(
     from app.ehr.ehr_advice import enhanced_advice_with_ehr
     from app.schemas.schemas import SymptomInput
 
+    def build_fallback_analysis(symptom_input: SymptomInput) -> dict:
+        from app.ehr.ehr_advice import create_fallback_symptom_analysis
+
+        intensities = create_fallback_symptom_analysis(
+            symptom_input.symptoms, symptom_input.duration
+        )
+        overall_severity = None
+        if intensities:
+            overall_severity = round(
+                sum(item["intensity"] for item in intensities) / len(intensities), 1
+            )
+
+        return {
+            "possible_diagnosis": ["Unable to analyze right now"],
+            "diagnosis_reasoning": "The analysis service is temporarily unavailable.",
+            "advice": [
+                {
+                    "step": "Monitor symptoms",
+                    "details": "Note any changes, rest, and try the analysis again later.",
+                }
+            ],
+            "when_to_seek_care": [
+                "Seek urgent care for severe, rapidly worsening, or alarming symptoms."
+            ],
+            "disclaimer": "This is not a diagnosis.",
+            "symptom_analysis": {
+                "intensities": intensities,
+                "overall_severity": overall_severity,
+            },
+            "ai_reminder_suggestions": [],
+        }
+
     # Create SymptomInput from extracted context
     symptom_input = SymptomInput(
         age=medical_context.get("age", 30),  # default age if not mentioned
@@ -215,14 +247,16 @@ async def analyze_chat_session(
         return analysis_result
     except Exception as e:
         print(f"Analysis failed: {e}")
+        fallback_result = build_fallback_analysis(symptom_input)
         ChatService.add_message(
             db,
             session_id,
             "assistant",
-            "I apologize, but I'm having trouble analyzing your symptoms right now. Please try again later.",
-            "error",
+            "I couldn't complete the analysis just now, but I provided a basic symptom summary.",
+            "medical_advice",
+            {"analysis_data": fallback_result},
         )
-        raise HTTPException(status_code=500, detail="Analysis failed")
+        return EnhancedAdviceOutWithReminders(**fallback_result)
 
 
 @router.get("/chat/sessions", response_model=List[ChatSessionResponse])

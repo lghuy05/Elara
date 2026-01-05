@@ -1,7 +1,7 @@
 // app/(drawer)/reminders.tsx - SIMPLIFIED TIME INPUT VERSION
 import {
   View, Text, ScrollView, TouchableOpacity, TextInput,
-  Alert, Modal, ActivityIndicator, Platform
+  Alert, Modal, ActivityIndicator
 } from 'react-native';
 import { useNavigation } from 'expo-router';
 import { remindersStyles } from '../styles/remindersStyles';
@@ -24,14 +24,6 @@ interface Reminder {
   created_at: string;
 }
 
-interface AIReminderSuggestion {
-  reminder_title: string;
-  reminder_description: string;
-  suggested_time: string;
-  suggested_frequency: string;
-  priority: string;
-}
-
 export default function RemindersScreen() {
   const navigation = useNavigation();
   const [reminders, setReminders] = useState<Reminder[]>([]);
@@ -42,9 +34,6 @@ export default function RemindersScreen() {
   const [selectedTime, setSelectedTime] = useState('08:00'); // Default time
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
   const [isRecurring, setIsRecurring] = useState(false);
-  const [aiSuggestions, setAiSuggestions] = useState<AIReminderSuggestion[]>([]);
-  const [showAiSuggestionModal, setShowAiSuggestionModal] = useState(false);
-  const [selectedSuggestion, setSelectedSuggestion] = useState<AIReminderSuggestion | null>(null);
 
   const daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
@@ -62,15 +51,6 @@ export default function RemindersScreen() {
       console.error('❌ Error fetching reminders:', error);
       console.error('Error details:', error.response?.data);
       Alert.alert('Error', 'Failed to load reminders');
-    }
-  };
-
-  const fetchAiSuggestions = async () => {
-    try {
-      // This would be called from the chat component when AI provides suggestions
-      console.log('Fetching AI suggestions...');
-    } catch (error) {
-      console.error('Error fetching AI suggestions:', error);
     }
   };
 
@@ -197,31 +177,6 @@ export default function RemindersScreen() {
     }
   };
 
-  const handleAiSuggestionSelect = (suggestion: AIReminderSuggestion) => {
-    setSelectedSuggestion(suggestion);
-    setShowAiSuggestionModal(true);
-  };
-
-  const createReminderFromSuggestion = () => {
-    if (!selectedSuggestion) return;
-
-    const reminderData = {
-      title: selectedSuggestion.reminder_title,
-      description: selectedSuggestion.reminder_description,
-      reminder_type: 'ai_suggestion',
-      scheduled_time: selectedSuggestion.suggested_time,
-      scheduled_date: new Date().toISOString().split('T')[0],
-      days_of_week: selectedSuggestion.suggested_frequency === 'daily' ? daysOfWeek : [],
-      is_recurring: selectedSuggestion.suggested_frequency !== 'once',
-      recurrence_pattern: selectedSuggestion.suggested_frequency === 'daily' ? 'daily' : 'weekly',
-      source: 'ai_suggestion'
-    };
-
-    createReminder(reminderData);
-    setShowAiSuggestionModal(false);
-    setSelectedSuggestion(null);
-  };
-
   const resetForm = () => {
     setNewReminder('');
     setNewDescription('');
@@ -232,7 +187,6 @@ export default function RemindersScreen() {
 
   useEffect(() => {
     fetchReminders();
-    fetchAiSuggestions();
   }, []);
 
   return (
@@ -379,52 +333,6 @@ export default function RemindersScreen() {
         </View>
       </Modal>
 
-      {/* AI Suggestions Modal */}
-      <Modal
-        visible={showAiSuggestionModal}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setShowAiSuggestionModal(false)}
-      >
-        <View style={remindersStyles.modalContainer}>
-          <View style={remindersStyles.modalContent}>
-            <Text style={remindersStyles.modalTitle}>AI Reminder Suggestion</Text>
-
-            {selectedSuggestion && (
-              <>
-                <Text style={remindersStyles.suggestionTitle}>
-                  {selectedSuggestion.reminder_title}
-                </Text>
-                <Text style={remindersStyles.suggestionDescription}>
-                  {selectedSuggestion.reminder_description}
-                </Text>
-                <Text style={remindersStyles.suggestionTime}>
-                  Suggested time: {selectedSuggestion.suggested_time}
-                </Text>
-                <Text style={remindersStyles.suggestionFrequency}>
-                  Frequency: {selectedSuggestion.suggested_frequency}
-                </Text>
-              </>
-            )}
-
-            <View style={remindersStyles.modalButtons}>
-              <TouchableOpacity
-                style={[remindersStyles.modalButton, remindersStyles.cancelButton]}
-                onPress={() => setShowAiSuggestionModal(false)}
-              >
-                <Text style={remindersStyles.cancelButtonText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[remindersStyles.modalButton, remindersStyles.saveButton]}
-                onPress={createReminderFromSuggestion}
-              >
-                <Text style={remindersStyles.saveButtonText}>Add to Reminders</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
       {/* Active Reminders */}
       <View style={remindersStyles.card}>
         <Text style={remindersStyles.cardTitle}>
@@ -436,7 +344,7 @@ export default function RemindersScreen() {
             <Text style={remindersStyles.emptyIcon}>⏰</Text>
             <Text style={remindersStyles.emptyTitle}>No active reminders</Text>
             <Text style={remindersStyles.emptyText}>
-              Create reminders above or get AI suggestions from chat
+              Create reminders above to stay on track
             </Text>
           </View>
         ) : (
