@@ -71,6 +71,68 @@ export default function ChatIntroScreen() {
 
   const navigation = useNavigation();
 
+  const shouldAutoAnalyze = (text: string) => {
+    const normalized = text.trim().toLowerCase();
+    return (
+      /\bplease\s+give\s+me\s+advice\b/.test(normalized) ||
+      /\bgive\s+me\s+advice\b/.test(normalized) ||
+      /\bprovide\s+advice\b/.test(normalized) ||
+      /\bplease\s+analyze\b/.test(normalized) ||
+      /\banalyze\s+my\s+symptoms\b/.test(normalized)
+    );
+  };
+
+  const runAnalysis = async (sessionId: number) => {
+    setShowAnalysisOffer(false);
+    setLoading(true);
+    const patientContext = getPatientContext();
+    const pendingId = Date.now().toString();
+    addMessage(
+      'Analyze my symptoms',
+      { loading: true, loading_message: 'Analyzing your symptoms...' },
+      'Analyze my symptoms',
+      patientContext,
+      pendingId
+    );
+
+    try {
+      const response = await api.post(`/chat/${sessionId}/analyze`);
+      const analysisResult: AIResponse = response.data;
+
+      // Add analysis result as a new message
+      updateMessage(pendingId, analysisResult);
+
+      // Check for AI reminder suggestions
+      if (analysisResult.ai_reminder_suggestions && analysisResult.ai_reminder_suggestions.length > 0) {
+        const initialCustomReminders: { [key: number]: CustomReminderData } = {};
+        const initialTempTime: { [key: number]: string } = {};
+
+        analysisResult.ai_reminder_suggestions.forEach((suggestion: AIReminderSuggestion, index: number) => {
+          initialCustomReminders[index] = {
+            title: suggestion.reminder_title,
+            description: suggestion.reminder_description,
+            scheduled_time: suggestion.suggested_time,
+            days_of_week: suggestion.suggested_frequency === 'daily' ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] : [],
+            is_recurring: suggestion.suggested_frequency !== 'once',
+            recurrence_pattern: suggestion.suggested_frequency === 'daily' ? 'daily' : 'weekly'
+          };
+          initialTempTime[index] = suggestion.suggested_time;
+        });
+
+        setAiReminderSuggestions(analysisResult.ai_reminder_suggestions);
+        setCustomReminders(initialCustomReminders);
+        setTempTime(initialTempTime);
+        setShowReminderPopup(true);
+      }
+
+    } catch (error: any) {
+      console.error('Analysis API Error:', error);
+      updateMessage(pendingId, { error: 'Failed to analyze symptoms. Please try again.' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Load patient profile on component mount
   useEffect(() => {
     const loadPatientData = async () => {
@@ -92,6 +154,7 @@ export default function ChatIntroScreen() {
     }
 
     if (chatLoading) return;
+    const autoAnalyze = shouldAutoAnalyze(text);
 
     // Use store loading state
     setLoading(true);
@@ -120,7 +183,7 @@ export default function ChatIntroScreen() {
       }
 
       // Handle analysis offer
-      if (chatResponse.requires_analysis) {
+      if (chatResponse.requires_analysis && !autoAnalyze) {
         setShowAnalysisOffer(true);
         setAnalysisPrompt(chatResponse.analysis_prompt || 'Would you like me to analyze your symptoms?');
       }
@@ -129,6 +192,11 @@ export default function ChatIntroScreen() {
         response: chatResponse.message.content
       };
       updateMessage(pendingId, aiResponse);
+
+      if (autoAnalyze) {
+        const sessionId = currentSessionId || chatResponse.session_id;
+        await runAnalysis(sessionId);
+      }
 
     } catch (error: any) {
       console.error('Chat API Error:', error);
@@ -165,55 +233,7 @@ export default function ChatIntroScreen() {
       Alert.alert('Error', 'No active chat session');
       return;
     }
-
-    setShowAnalysisOffer(false);
-    setLoading(true);
-    const patientContext = getPatientContext();
-    const pendingId = Date.now().toString();
-    addMessage(
-      'Analyze my symptoms',
-      { loading: true, loading_message: 'Analyzing your symptoms...' },
-      'Analyze my symptoms',
-      patientContext,
-      pendingId
-    );
-
-    try {
-      const response = await api.post(`/chat/${currentSessionId}/analyze`);
-      const analysisResult: AIResponse = response.data;
-
-      // Add analysis result as a new message
-      updateMessage(pendingId, analysisResult);
-
-      // Check for AI reminder suggestions
-      if (analysisResult.ai_reminder_suggestions && analysisResult.ai_reminder_suggestions.length > 0) {
-        const initialCustomReminders: { [key: number]: CustomReminderData } = {};
-        const initialTempTime: { [key: number]: string } = {};
-
-        analysisResult.ai_reminder_suggestions.forEach((suggestion: AIReminderSuggestion, index: number) => {
-          initialCustomReminders[index] = {
-            title: suggestion.reminder_title,
-            description: suggestion.reminder_description,
-            scheduled_time: suggestion.suggested_time,
-            days_of_week: suggestion.suggested_frequency === 'daily' ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] : [],
-            is_recurring: suggestion.suggested_frequency !== 'once',
-            recurrence_pattern: suggestion.suggested_frequency === 'daily' ? 'daily' : 'weekly'
-          };
-          initialTempTime[index] = suggestion.suggested_time;
-        });
-
-        setAiReminderSuggestions(analysisResult.ai_reminder_suggestions);
-        setCustomReminders(initialCustomReminders);
-        setTempTime(initialTempTime);
-        setShowReminderPopup(true);
-      }
-
-    } catch (error: any) {
-      console.error('Analysis API Error:', error);
-      updateMessage(pendingId, { error: 'Failed to analyze symptoms. Please try again.' });
-    } finally {
-      setLoading(false);
-    }
+    await runAnalysis(currentSessionId);
   };
 
   // Reminder functions (keep the same as before)

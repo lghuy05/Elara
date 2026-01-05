@@ -81,13 +81,14 @@ async def chat_endpoint(
                 db, session.id, conversational_response["update_context"]
             )
 
-        # Also update context with extracted symptoms for later use
+        # Also update context with extracted details for later use
+        extracted_updates = {}
         if conversational_response.get("extracted_symptoms"):
-            ChatService.update_session_context(
-                db,
-                session.id,
-                {"symptoms": conversational_response["extracted_symptoms"]},
-            )
+            extracted_updates["symptoms"] = conversational_response["extracted_symptoms"]
+        if conversational_response.get("extracted_duration"):
+            extracted_updates["duration"] = conversational_response["extracted_duration"]
+        if extracted_updates:
+            ChatService.update_session_context(db, session.id, extracted_updates)
     else:
         # Fallback response
         response_content = "Hello! I'm here to help with your health concerns. How are you feeling today?"
@@ -138,10 +139,30 @@ async def analyze_chat_session(
         {"role": msg.role, "content": msg.content} for msg in messages
     ]
 
-    # Extract medical context from the entire conversation
-    medical_context = ConversationalAIService.extract_medical_context_from_conversation(
-        conversation_history
-    )
+    # Prefer existing session context to avoid an extra LLM call when possible
+    context_data = session.context_data or {}
+    medical_context = {
+        "symptoms": context_data.get("symptoms")
+        or context_data.get("extracted_symptoms")
+        or "",
+        "duration": context_data.get("duration")
+        or context_data.get("extracted_duration")
+        or "",
+        "medications": context_data.get("medications")
+        or context_data.get("meds")
+        or [],
+        "conditions": context_data.get("conditions") or [],
+        "age": context_data.get("age") or 30,
+        "sex": context_data.get("sex"),
+    }
+
+    if not medical_context.get("symptoms"):
+        # Fallback to full-conversation extraction if context is missing
+        medical_context = (
+            ConversationalAIService.extract_medical_context_from_conversation(
+                conversation_history
+            )
+        )
 
     print(f"🩺 Extracted Medical Context: {medical_context}")
 

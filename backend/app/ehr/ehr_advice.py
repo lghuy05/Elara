@@ -183,19 +183,38 @@ def enhanced_advice_with_ehr(
     ]
 
     print("🤖 Generating medical advice with EHR context...")
-    response = require_json_with_retry(
-        message,
-        max_tokens=900,
-        defaults={
-            "possible_diagnosis": [],
-            "diagnosis_reasoning": "",
-            "advice": [],
-            "when_to_seek_care": [],
-            "disclaimer": "This is not a diagnosis.",
+    try:
+        response = require_json_with_retry(
+            message,
+            max_tokens=900,
+            defaults={
+                "possible_diagnosis": [],
+                "diagnosis_reasoning": "",
+                "advice": [],
+                "when_to_seek_care": [],
+                "disclaimer": "This is not a diagnosis.",
+                "symptom_analysis": {"intensities": [], "overall_severity": None},
+                "ai_reminder_suggestions": [],
+            },
+        )
+    except Exception as e:
+        print(f"❌ LLM analysis failed: {e}")
+        response = {
+            "possible_diagnosis": ["Unable to analyze - AI service issue"],
+            "diagnosis_reasoning": "The AI analysis service did not return a valid response.",
+            "advice": [
+                {
+                    "step": "Try again",
+                    "details": "Please retry the analysis in a few moments.",
+                }
+            ],
+            "when_to_seek_care": [
+                "If symptoms worsen or you experience emergency symptoms"
+            ],
+            "disclaimer": "AI service temporarily unavailable",
             "symptom_analysis": {"intensities": [], "overall_severity": None},
             "ai_reminder_suggestions": [],
-        },
-    )
+        }
 
     print(f"🔍 LLM RESPONSE TYPE: {type(response)}")
     print(f"🔍 LLM RESPONSE CONTENT: {response}")
