@@ -94,14 +94,6 @@ async def chat_endpoint(
         # Fallback response
         response_content = "Hello! I'm here to help with your health concerns. How are you feeling today?"
 
-    if should_offer_analysis:
-        # OFFER ANALYSIS MODE
-        response_content = (
-            "Based on what you've told me, I can analyze your symptoms and provide medical guidance. "
-            "This includes possible causes, self-care advice, and when to see a doctor. "
-            "Would you like me to do that analysis for you?"
-        )
-
     # Save assistant response
     assistant_message = ChatService.add_message(
         db, session.id, "assistant", response_content

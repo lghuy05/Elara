@@ -15,7 +15,7 @@ class ConversationalAIService:
         system_prompt = """You are a medical assistant gathering information. Your goals:
         1) Extract key medical information (symptoms, duration, severity, medications, conditions)
         2) Ask clarifying questions when information is missing
-        3) Decide if you have enough info to offer medical analysis
+        3) Decide if you have enough info to run medical analysis
         4) Respond conversationally and empathetically
 
         Return JSON with EXACT fields:
@@ -31,7 +31,9 @@ class ConversationalAIService:
         }
 
         Be conservative: only set should_offer_analysis when sufficient info is present
-        and the user is clearly asking for medical advice or analysis."""
+        and the user is clearly asking for medical advice or analysis.
+        Do not ask for permission or present a modal-style offer. If analysis should run,
+        respond with a brief, reassuring transition like "Got it — I'll analyze this now.""""
 
         user_context = f"Current conversation:\n"
         for msg in conversation_history[-6:]:  # Last 6 messages for context

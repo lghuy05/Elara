@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
   KeyboardAvoidingView, Platform, SafeAreaView,
-  ActivityIndicator, ScrollView, Alert, Modal
+  ActivityIndicator, ScrollView, Alert
 } from 'react-native';
 import { router, useNavigation } from 'expo-router';
 import { chatStyles } from '../styles/chatStyles';
@@ -32,8 +32,6 @@ interface ChatResponse {
 
 export default function ChatIntroScreen() {
   const [message, setMessage] = useState('');
-  const [showAnalysisOffer, setShowAnalysisOffer] = useState(false);
-  const [analysisPrompt, setAnalysisPrompt] = useState('');
 
   // Use chat store for all state management
   const {
@@ -68,19 +66,13 @@ export default function ChatIntroScreen() {
     );
   };
 
-  const runAnalysis = async (sessionId: number) => {
-    setShowAnalysisOffer(false);
+  const runAnalysis = async (sessionId: number, messageId: string, baseResponse: string) => {
     setLoading(true);
-    const patientContext = getPatientContext();
-    const pendingId = Date.now().toString();
-    addMessage(
-      'Analyze my symptoms',
-      { loading: true, loading_message: 'Analyzing your symptoms...' },
-      'Analyze my symptoms',
-      patientContext,
-      pendingId
-    );
-
+    updateMessage(messageId, {
+      response: baseResponse,
+      loading: true,
+      loading_message: 'Analyzing your symptoms...'
+    });
     try {
       const analysisTimeoutMs = 45000;
       const response = await Promise.race([
@@ -94,12 +86,11 @@ export default function ChatIntroScreen() {
       ]);
       const analysisResult: AIResponse = (response as any).data;
 
-      // Add analysis result as a new message
-      updateMessage(pendingId, analysisResult);
-
+      updateMessage(messageId, { response: baseResponse, ...analysisResult });
     } catch (error: any) {
       console.error('Analysis API Error:', error);
-      updateMessage(pendingId, {
+      updateMessage(messageId, {
+        response: baseResponse,
         error: error?.message || 'Failed to analyze symptoms. Please try again.'
       });
     } finally {
@@ -128,8 +119,6 @@ export default function ChatIntroScreen() {
     }
 
     if (chatLoading) return;
-    const autoAnalyze = shouldAutoAnalyze(text);
-
     // Use store loading state
     setLoading(true);
     const patientContext = getPatientContext();
@@ -156,20 +145,15 @@ export default function ChatIntroScreen() {
         setCurrentSessionId(chatResponse.session_id);
       }
 
-      // Handle analysis offer
-      if (chatResponse.requires_analysis && !autoAnalyze) {
-        setShowAnalysisOffer(true);
-        setAnalysisPrompt(chatResponse.analysis_prompt || 'Would you like me to analyze your symptoms?');
-      }
-
       const aiResponse: AIResponse = {
         response: chatResponse.message.content
       };
       updateMessage(pendingId, aiResponse);
 
-      if (autoAnalyze) {
+      const shouldAnalyze = shouldAutoAnalyze(text) || chatResponse.requires_analysis;
+      if (shouldAnalyze) {
         const sessionId = currentSessionId || chatResponse.session_id;
-        await runAnalysis(sessionId);
+        await runAnalysis(sessionId, pendingId, chatResponse.message.content);
       }
 
     } catch (error: any) {
@@ -200,14 +184,6 @@ export default function ChatIntroScreen() {
       e.preventDefault();
       send();
     }
-  };
-
-  const handleAcceptAnalysis = async () => {
-    if (!currentSessionId) {
-      Alert.alert('Error', 'No active chat session');
-      return;
-    }
-    await runAnalysis(currentSessionId);
   };
 
   // Enhanced chat message renderer (REMOVED HealthcareProvidersCard)
@@ -448,34 +424,6 @@ export default function ChatIntroScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Analysis Offer Modal */}
-        <Modal
-          visible={showAnalysisOffer}
-          animationType="slide"
-          transparent={true}
-          onRequestClose={() => setShowAnalysisOffer(false)}
-        >
-          <View style={chatStyles.analysisOfferContainer}>
-            <View style={chatStyles.analysisOfferCard}>
-              <Text style={chatStyles.analysisOfferTitle}>🩺 Medical Analysis Available</Text>
-              <Text style={chatStyles.analysisOfferText}>{analysisPrompt}</Text>
-              <View style={chatStyles.analysisOfferButtons}>
-                <TouchableOpacity
-                  style={chatStyles.analysisOfferButtonSecondary}
-                  onPress={() => setShowAnalysisOffer(false)}
-                >
-                  <Text style={chatStyles.analysisOfferButtonTextSecondary}>Not Now</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={chatStyles.analysisOfferButton}
-                  onPress={handleAcceptAnalysis}
-                >
-                  <Text style={chatStyles.analysisOfferButtonText}>Yes, Analyze</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-        </Modal>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
