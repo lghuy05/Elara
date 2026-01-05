@@ -33,7 +33,7 @@ class ConversationalAIService:
         Be conservative: only set should_offer_analysis when sufficient info is present
         and the user is clearly asking for medical advice or analysis.
         Do not ask for permission or present a modal-style offer. If analysis should run,
-        respond with a brief, reassuring transition like "Got it — I'll analyze this now.""""
+        respond with a brief, reassuring transition like: Got it - I'll analyze this now."""
 
         user_context = f"Current conversation:\n"
         for msg in conversation_history[-6:]:  # Last 6 messages for context
