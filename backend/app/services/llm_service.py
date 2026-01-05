@@ -59,30 +59,52 @@ def parse_or_repair(raw: str) -> dict:
 #         return parse_or_repair(raw2)
 
 
-def require_json_with_retry(message):
+def _resolve_messages(message):
+    return message() if callable(message) else message
+
+
+def require_json_with_retry(
+    message,
+    *,
+    defaults: dict | None = None,
+    required_keys: list[str] | None = None,
+    model: str | None = None,
+    max_tokens: int | None = None,
+    temperature: float = 0.0,
+) -> dict:
+    """Call LLM -> parse/repair -> enforce required fields; one retry on failure."""
+    messages = _resolve_messages(message)
     try:
-        response_text = chat_completion(message)
+        raw = chat_completion(
+            messages, model=model, max_tokens=max_tokens, temperature=temperature
+        )
+        parsed = parse_or_repair(raw)
+    except HTTPException:
+        fixer_msgs = [
+            {
+                "role": "system",
+                "content": "Convert the user's text into valid, minified JSON ONLY. No prose, no markdown.",
+            },
+            {"role": "user", "content": raw or ""},
+        ]
+        raw2 = chat_completion(
+            fixer_msgs, model=model, max_tokens=max_tokens, temperature=0.0
+        )
+        parsed = parse_or_repair(raw2)
 
-        parsed_response = json.loads(response_text)
-        print(f"✅ LLM returned valid JSON")
-        return parsed_response
-    except json.JSONDecodeError:
-        # If it's not JSON, try to extract JSON from the response
-        print(f"⚠️ LLM returned non-JSON response, attempting extraction")
+    if not isinstance(parsed, dict):
+        raise HTTPException(502, "Model returned non-object JSON.")
 
-        # Look for JSON pattern in the response
-        import re
+    if defaults:
+        for key, value in defaults.items():
+            if key not in parsed:
+                parsed[key] = value
 
-        json_match = re.search(r"\{.*\}", response_text, re.DOTALL)
-        if json_match:
-            try:
-                parsed_response = json.loads(json_match.group())
-                print(f"✅ Extracted JSON from response")
-                return parsed_response
-            except json.JSONDecodeError:
-                pass
+    if required_keys:
+        missing = [key for key in required_keys if key not in parsed]
+        if missing:
+            raise HTTPException(
+                status_code=502, detail=f"Model missing JSON fields: {missing}"
+            )
 
-        return {"raw": response_text}
-
-    except Exception as e:
-        return {"error": str(e)}
+    return parsed

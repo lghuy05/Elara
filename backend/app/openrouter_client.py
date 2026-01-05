@@ -29,6 +29,9 @@ if not OPENROUTER_API_KEY or not OPENROUTER_API_KEY.startswith("sk-or-"):
 OPENROUTER_BASE = os.getenv("OPENROUTER_BASE", "https://openrouter.ai/api/v1")
 APP_REFERER = os.getenv("APP_REFERER", "http://localhost:8000")
 APP_TITLE = os.getenv("APP_TITLE", "AI Doctor App")
+OPENROUTER_FAST_MODEL = os.getenv(
+    "OPENROUTER_FAST_MODEL", "meta-llama/llama-3.3-70b-instruct:free"
+)
 
 # ------------------------------------------------------
 # Step 4: Safety check — verify API key exists and is valid
@@ -62,7 +65,9 @@ def extract_medical_keywords(symptoms_text: str) -> list[str] | None:
                     "content": "You are a medical transcription assistant. Extract only medical symptoms and conditions.",
                 },
                 {"role": "user", "content": prompt},
-            ]
+            ],
+            model=OPENROUTER_FAST_MODEL,
+            temperature=0.0,
         )
         keywords = response.strip()
         if "\n" in keywords:
@@ -74,7 +79,14 @@ def extract_medical_keywords(symptoms_text: str) -> list[str] | None:
         return None
 
 
-def chat_completion(messages, model="meta-llama/llama-3.3-70b-instruct:free"):
+def chat_completion(
+    messages,
+    model="meta-llama/llama-3.3-70b-instruct:free",
+    *,
+    max_tokens=400,
+    temperature=0.5,
+    timeout=60,
+):
     headers = {
         "Authorization": f"Bearer {OPENROUTER_API_KEY}",
         "Content-Type": "application/json",
@@ -85,13 +97,16 @@ def chat_completion(messages, model="meta-llama/llama-3.3-70b-instruct:free"):
     payload = {
         "model": model,
         "messages": messages,
-        "max_tokens": 400,
-        "temperature": 0.5,
+        "max_tokens": max_tokens,
+        "temperature": temperature,
     }
 
     # Make the POST request to the API
     r = requests.post(
-        f"{OPENROUTER_BASE}/chat/completions", json=payload, headers=headers, timeout=60
+        f"{OPENROUTER_BASE}/chat/completions",
+        json=payload,
+        headers=headers,
+        timeout=timeout,
     )
     if not r.ok:
         # If unauthorized or server error, print details

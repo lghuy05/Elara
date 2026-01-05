@@ -1,5 +1,6 @@
 # Create new file: app/services/healthcare_analyzer.py
 from app.services.llm_service import require_json_with_retry
+from app.openrouter_client import OPENROUTER_FAST_MODEL
 
 
 def analyze_healthcare_needs(symptoms: str) -> dict:
@@ -38,7 +39,15 @@ def analyze_healthcare_needs(symptoms: str) -> dict:
     ]
 
     try:
-        response = require_json_with_retry(prompt)
+        response = require_json_with_retry(
+            prompt,
+            model=OPENROUTER_FAST_MODEL,
+            defaults={
+                "needed_specialty": "primary_care",
+                "urgency": "routine",
+                "reasoning": "General symptoms.",
+            },
+        )
         return response
     except Exception as e:
         print(f"❌ LLM healthcare analysis failed: {e}")

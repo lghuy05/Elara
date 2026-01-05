@@ -45,19 +45,52 @@ async def chat_endpoint(
     # Save user message
     user_message = ChatService.add_message(db, session.id, "user", chat_input.message)
 
-    # ANALYZE: Should we switch to analysis mode?
-    analysis_check = ConversationalAIService.analyze_conversation_for_medical_context(
-        chat_input.message, conversation_history
+    conversational_response = ConversationalAIService.generate_conversational_response(
+        chat_input.message, conversation_history, session.context_data or {}
     )
 
-    print(f"🔍 Analysis Check: {analysis_check}")
+    # FIX: Handle both string and dictionary responses
+    print(f"🔍 DEBUG: conversational_response type: {type(conversational_response)}")
+    print(f"🔍 DEBUG: conversational_response content: {conversational_response}")
 
-    # STRATEGY: Only offer analysis if we have good info AND user seems to want it
-    should_offer_analysis = (
-        analysis_check.get("should_offer_analysis", False)
-        and analysis_check.get("has_sufficient_info", False)
-        and analysis_check.get("confidence_score", 0) > 0.7  # Be conservative
-    )
+    if isinstance(conversational_response, str):
+        try:
+            # Try to parse as JSON
+            conversational_response = json.loads(conversational_response)
+            response_content = conversational_response.get(
+                "response",
+                "I'm here to help with your health concerns. Could you tell me more about what you're experiencing?",
+            )
+        except json.JSONDecodeError:
+            # If it's not JSON, use the string directly
+            response_content = conversational_response
+    elif isinstance(conversational_response, dict):
+        response_content = conversational_response.get(
+            "response",
+            "I'm here to help with your health concerns. Could you tell me more about what you're experiencing?",
+        )
+        should_offer_analysis = (
+            conversational_response.get("should_offer_analysis", False)
+            and conversational_response.get("has_sufficient_info", False)
+            and conversational_response.get("confidence_score", 0) > 0.7
+        )
+
+        # Update session context if new medical info was extracted
+        if conversational_response.get("update_context"):
+            ChatService.update_session_context(
+                db, session.id, conversational_response["update_context"]
+            )
+
+        # Also update context with extracted symptoms for later use
+        if conversational_response.get("extracted_symptoms"):
+            ChatService.update_session_context(
+                db,
+                session.id,
+                {"symptoms": conversational_response["extracted_symptoms"]},
+            )
+    else:
+        # Fallback response
+        response_content = "Hello! I'm here to help with your health concerns. How are you feeling today?"
 
     if should_offer_analysis:
         # OFFER ANALYSIS MODE
@@ -66,55 +99,6 @@ async def chat_endpoint(
             "This includes possible causes, self-care advice, and when to see a doctor. "
             "Would you like me to do that analysis for you?"
         )
-
-        # Also update context with extracted symptoms for later use
-        if analysis_check.get("extracted_symptoms"):
-            ChatService.update_session_context(
-                db, session.id, {"symptoms": analysis_check["extracted_symptoms"]}
-            )
-
-    else:
-        # NORMAL CONVERSATION MODE
-        conversational_response = (
-            ConversationalAIService.generate_conversational_response(
-                chat_input.message, conversation_history, session.context_data or {}
-            )
-        )
-
-        # FIX: Handle both string and dictionary responses
-        print(
-            f"🔍 DEBUG: conversational_response type: {type(conversational_response)}"
-        )
-        print(f"🔍 DEBUG: conversational_response content: {conversational_response}")
-
-        if isinstance(conversational_response, str):
-            try:
-                # Try to parse as JSON
-                conversational_response = json.loads(conversational_response)
-                response_content = conversational_response.get(
-                    "response",
-                    "I'm here to help with your health concerns. Could you tell me more about what you're experiencing?",
-                )
-            except json.JSONDecodeError:
-                # If it's not JSON, use the string directly
-                response_content = conversational_response
-        elif isinstance(conversational_response, dict):
-            response_content = conversational_response.get(
-                "response",
-                "I'm here to help with your health concerns. Could you tell me more about what you're experiencing?",
-            )
-            should_offer_analysis = conversational_response.get(
-                "should_offer_analysis", False
-            )
-
-            # Update session context if new medical info was extracted
-            if conversational_response.get("update_context"):
-                ChatService.update_session_context(
-                    db, session.id, conversational_response["update_context"]
-                )
-        else:
-            # Fallback response
-            response_content = "Hello! I'm here to help with your health concerns. How are you feeling today?"
 
     # Save assistant response
     assistant_message = ChatService.add_message(

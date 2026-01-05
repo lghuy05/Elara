@@ -13,23 +13,29 @@ const api = axios.create({
   },
 });
 
+const isDev = typeof __DEV__ !== 'undefined' && __DEV__;
+
 // Request interceptor
 api.interceptors.request.use(
   async (config) => {
-    console.log(`🟡 Making ${config.method?.toUpperCase()} request to: ${config.url}`);
+    if (isDev) {
+      console.log(`🟡 Making ${config.method?.toUpperCase()} request to: ${config.url}`);
+    }
     const isAuthEndpoint = config.url?.includes('/auth/');
     if (!isAuthEndpoint) {
       try {
         const token = await getToken();
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
-          console.log('✅ Token added to request');
+          if (isDev) {
+            console.log('✅ Token added to request');
+          }
         }
       } catch (error) {
         console.error('❌ Error adding token to request:', error);
       }
     }
-    if (config.data) {
+    if (config.data && isDev) {
       console.log('📤 Request payload:', JSON.stringify(config.data, null, 2));
     }
     return config;
@@ -43,7 +49,9 @@ api.interceptors.request.use(
 // Response interceptor
 api.interceptors.response.use(
   (response) => {
-    console.log(`✅ Response ${response.status} from: ${response.config.url}`);
+    if (isDev) {
+      console.log(`✅ Response ${response.status} from: ${response.config.url}`);
+    }
     return response;
   },
   (error) => {

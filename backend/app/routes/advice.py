@@ -20,10 +20,9 @@ def route_advice(inp: SymptomInput):
             "Return JSON ONLY with keys: advice[], when_to_seek_care[], disclaimer."
         )
         user = (
-            f"Age: {inp.age}\nSex: {inp.sex}\nSymptoms: {inp.symptoms}\nDuration: {
-                inp.duration
-            }\n"
-            f"Meds: {inp.meds}\nConditions: {inp.conditions}\nSchema example:\n"
+            f"Age: {inp.age}\nSex: {inp.sex}\nSymptoms: {inp.symptoms}\n"
+            f"Duration: {inp.duration}\nMeds: {inp.meds}\n"
+            f"Conditions: {inp.conditions}\nSchema example:\n"
             + '{"advice":[{"step":"Hydration","details":"Small sips of water."}],"when_to_seek_care":["Trouble breathing"],"disclaimer":"This is not a diagnosis."}'
         )
         return [
@@ -31,7 +30,14 @@ def route_advice(inp: SymptomInput):
             {"role": "user", "content": user},
         ]
 
-    data = require_json_with_retry(build_messages)
+    data = require_json_with_retry(
+        build_messages,
+        defaults={
+            "advice": [],
+            "when_to_seek_care": [],
+            "disclaimer": "This is not a diagnosis.",
+        },
+    )
 
     # Post-filter: block dosing in patient-facing advice
     full = " ".join(

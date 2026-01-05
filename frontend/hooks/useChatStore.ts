@@ -34,6 +34,7 @@ export interface AIResponse {
   // Simple conversation response
   response?: string;
   loading?: boolean;
+  loading_message?: string;
 
   // Medical analysis response
   emergency?: boolean;
@@ -71,7 +72,14 @@ interface ChatStore {
   currentSessionId: number | null;
 
   // Actions
-  addMessage: (userMessage: string, aiResponse: AIResponse, symptoms: string, patientContext: any) => void;
+  addMessage: (
+    userMessage: string,
+    aiResponse: AIResponse,
+    symptoms: string,
+    patientContext: any,
+    messageId?: string
+  ) => void;
+  updateMessage: (id: string, aiResponse: AIResponse) => void;
   clearCurrentSession: () => void;
   setCurrentSessionId: (sessionId: number | null) => void;
   triggerAnalyticsRefresh: () => void;
@@ -83,9 +91,15 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   isLoading: false,
   currentSessionId: null,
 
-  addMessage: (userMessage: string, aiResponse: AIResponse, symptoms: string, patientContext: any) => {
+  addMessage: (
+    userMessage: string,
+    aiResponse: AIResponse,
+    symptoms: string,
+    patientContext: any,
+    messageId?: string
+  ) => {
     const newMessage: ChatMessage = {
-      id: Date.now().toString(),
+      id: messageId || Date.now().toString(),
       userMessage,
       aiResponse,
       timestamp: new Date(),
@@ -111,6 +125,20 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       hasSymptoms: !!aiResponse.symptom_analysis,
       hasAdvice: !!aiResponse.advice
     });
+  },
+
+  updateMessage: (id: string, aiResponse: AIResponse) => {
+    set(state => ({
+      currentSession: state.currentSession.map(message =>
+        message.id === id ? { ...message, aiResponse } : message
+      )
+    }));
+
+    if (aiResponse.possible_diagnosis || aiResponse.symptom_analysis || aiResponse.advice) {
+      const analyticsStore = useAnalyticsStore.getState();
+      analyticsStore.fetchAnalyticsData();
+      console.log('📊 Analytics refreshed due to medical analysis');
+    }
   },
 
   clearCurrentSession: () => {

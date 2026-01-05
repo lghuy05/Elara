@@ -10,6 +10,10 @@ venv/
 env/
 .venv/
 .expo/
+node_modules/
+dist/
+backend/chroma_storage/
+__pycache__/
 
 Dockerfile
 docker-compose.yml

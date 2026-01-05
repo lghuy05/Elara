@@ -3,5 +3,11 @@
     "@expo/cli": "^54.0.10",
     "@types/react": "~19.1.10",
     "typescript": "~5.9.2"
+  },
+  "dependencies": {
+    "@babel/core": "^7.28.5",
+    "@babel/preset-env": "^7.28.5",
+    "metro": "^0.83.3",
+    "metro-config": "^0.83.3"
   }
 }

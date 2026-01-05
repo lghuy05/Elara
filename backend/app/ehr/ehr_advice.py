@@ -50,7 +50,7 @@ def enhanced_advice_with_ehr(
 
     # 2. Get medical context (synchronous - no await needed)
     try:
-        medical_context = get_medical_context(inp.symptoms, min_results=2)
+        medical_context = get_medical_context(inp.symptoms, min_results=1)
     except Exception as e:
         print(f"Medical context failed: {e}")
         medical_context = {"articles": []}
@@ -148,9 +148,7 @@ def enhanced_advice_with_ehr(
         and medical_context["articles"]
     ):
         research_text = "MEDICAL RESEARCH CONTEXT (from recent PubMed Studies):\n"
-        for i, article in enumerate(
-            medical_context["articles"][:2], 1
-        ):  # Reduced to 3 for speed
+        for i, article in enumerate(medical_context["articles"][:1], 1):
             research_text += (
                 f"{i}. {article['title']} ({article['year']}) - "
                 f"Relevance: {article.get('relevance_score', 0):.2f}\n"
@@ -185,7 +183,19 @@ def enhanced_advice_with_ehr(
     ]
 
     print("🤖 Generating medical advice with EHR context...")
-    response = require_json_with_retry(message)
+    response = require_json_with_retry(
+        message,
+        max_tokens=900,
+        defaults={
+            "possible_diagnosis": [],
+            "diagnosis_reasoning": "",
+            "advice": [],
+            "when_to_seek_care": [],
+            "disclaimer": "This is not a diagnosis.",
+            "symptom_analysis": {"intensities": [], "overall_severity": None},
+            "ai_reminder_suggestions": [],
+        },
+    )
 
     print(f"🔍 LLM RESPONSE TYPE: {type(response)}")
     print(f"🔍 LLM RESPONSE CONTENT: {response}")

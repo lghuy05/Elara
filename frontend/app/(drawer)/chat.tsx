@@ -53,6 +53,7 @@ export default function ChatIntroScreen() {
   const {
     currentSession,
     addMessage,
+    updateMessage,
     clearCurrentSession,
     isLoading: chatLoading,
     currentSessionId,
@@ -94,11 +95,18 @@ export default function ChatIntroScreen() {
 
     // Use store loading state
     setLoading(true);
+    const patientContext = getPatientContext();
+    const pendingId = Date.now().toString();
+    addMessage(
+      text,
+      { loading: true, loading_message: 'Thinking...' },
+      text,
+      patientContext,
+      pendingId
+    );
+    setMessage('');
 
     try {
-      // Get patient context BEFORE making the API call
-      const patientContext = getPatientContext();
-
       const response = await api.post('/chat', {
         message: text,
         session_id: currentSessionId
@@ -117,15 +125,10 @@ export default function ChatIntroScreen() {
         setAnalysisPrompt(chatResponse.analysis_prompt || 'Would you like me to analyze your symptoms?');
       }
 
-      // Create AI response object based on message type
-      let aiResponse: AIResponse = {
+      const aiResponse: AIResponse = {
         response: chatResponse.message.content
       };
-
-      // Add message to store
-      addMessage(text, aiResponse, text, patientContext);
-
-      setMessage('');
+      updateMessage(pendingId, aiResponse);
 
     } catch (error: any) {
       console.error('Chat API Error:', error);
@@ -141,9 +144,8 @@ export default function ChatIntroScreen() {
         errorMessage = 'Server is temporarily unavailable. Please try again later.';
       }
 
-      const patientContext = getPatientContext();
       const errorResponse: AIResponse = { error: errorMessage };
-      addMessage(text, errorResponse, text, patientContext);
+      updateMessage(pendingId, errorResponse);
 
     } finally {
       setLoading(false);
@@ -166,20 +168,22 @@ export default function ChatIntroScreen() {
 
     setShowAnalysisOffer(false);
     setLoading(true);
+    const patientContext = getPatientContext();
+    const pendingId = Date.now().toString();
+    addMessage(
+      'Analyze my symptoms',
+      { loading: true, loading_message: 'Analyzing your symptoms...' },
+      'Analyze my symptoms',
+      patientContext,
+      pendingId
+    );
 
     try {
       const response = await api.post(`/chat/${currentSessionId}/analyze`);
       const analysisResult: AIResponse = response.data;
 
-      const patientContext = getPatientContext();
-
       // Add analysis result as a new message
-      addMessage(
-        'Analyze my symptoms',
-        analysisResult,
-        'Analyze my symptoms',
-        patientContext
-      );
+      updateMessage(pendingId, analysisResult);
 
       // Check for AI reminder suggestions
       if (analysisResult.ai_reminder_suggestions && analysisResult.ai_reminder_suggestions.length > 0) {
@@ -206,7 +210,7 @@ export default function ChatIntroScreen() {
 
     } catch (error: any) {
       console.error('Analysis API Error:', error);
-      Alert.alert('Error', 'Failed to analyze symptoms. Please try again.');
+      updateMessage(pendingId, { error: 'Failed to analyze symptoms. Please try again.' });
     } finally {
       setLoading(false);
     }
@@ -428,7 +432,9 @@ export default function ChatIntroScreen() {
           {chat.aiResponse.loading && (
             <View style={[chatStyles.card, chatStyles.loadingCard]}>
               <ActivityIndicator size="large" color="#3B82F6" />
-              <Text style={chatStyles.loadingText}>Analyzing your symptoms...</Text>
+              <Text style={chatStyles.loadingText}>
+                {chat.aiResponse.loading_message || 'Working on it...'}
+              </Text>
             </View>
           )}
 
@@ -599,12 +605,6 @@ export default function ChatIntroScreen() {
 
           {currentSession.map(renderChatMessage)}
 
-          {chatLoading && (
-            <View style={[chatStyles.card, chatStyles.loadingCard]}>
-              <ActivityIndicator size="large" color="#3B82F6" />
-              <Text style={chatStyles.loadingText}>Analyzing your symptoms...</Text>
-            </View>
-          )}
         </ScrollView>
 
         {/* Input Bar */}

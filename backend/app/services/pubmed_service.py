@@ -39,8 +39,9 @@ def get_article_from_pubmed(common_symptoms: list[str]):
             "datetype": "pdat",
         }
         try:
-            responses = requests.get(PUBMED_BASE_URL_SEARCH, params=param)
-            data = responses.json()
+            responses = requests.get(
+                PUBMED_BASE_URL_SEARCH, params=param, timeout=10
+            )
 
             print(f"StatusfCode: {responses.status_code}")
             print(f"URL: {responses.url}")
@@ -124,7 +125,9 @@ def fetch_article_from_ids(all_article_ids):
             "rettype": "abstract",
         }
         try:
-            responses = requests.get(PUBMED_BASE_URL_FETCH, params=params)
+            responses = requests.get(
+                PUBMED_BASE_URL_FETCH, params=params, timeout=10
+            )
 
             if responses.status_code == 200:
                 article = parse_articles(responses.text)
