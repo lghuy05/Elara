@@ -1,5 +1,7 @@
 // hooks/useChatStore.ts - UPDATED FOR CHAT FLOW
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
+import { createJSONStorage, persist } from 'zustand/middleware';
 import { useAnalyticsStore } from './useAnalyticsStore';
 
 export interface AIReminderSuggestion {
@@ -62,7 +64,7 @@ export interface ChatMessage {
   id: string;
   userMessage: string;
   aiResponse: AIResponse;
-  timestamp: Date;
+  timestamp: string;
   patientContext: any;
 }
 
@@ -86,81 +88,93 @@ interface ChatStore {
   setLoading: (loading: boolean) => void;
 }
 
-export const useChatStore = create<ChatStore>((set, get) => ({
-  currentSession: [],
-  isLoading: false,
-  currentSessionId: null,
-
-  addMessage: (
-    userMessage: string,
-    aiResponse: AIResponse,
-    symptoms: string,
-    patientContext: any,
-    messageId?: string
-  ) => {
-    const newMessage: ChatMessage = {
-      id: messageId || Date.now().toString(),
-      userMessage,
-      aiResponse,
-      timestamp: new Date(),
-      patientContext
-    };
-
-    set(state => ({
-      currentSession: [...state.currentSession, newMessage]
-    }));
-
-    // Only trigger analytics for medical analysis responses (not simple conversations)
-    if (aiResponse.possible_diagnosis || aiResponse.symptom_analysis || aiResponse.advice) {
-      const analyticsStore = useAnalyticsStore.getState();
-      analyticsStore.fetchAnalyticsData();
-
-      console.log('📊 Analytics refreshed due to medical analysis');
-    }
-
-    // Log for debugging
-    console.log('💬 Chat message added:', {
-      userMessage,
-      hasDiagnosis: !!aiResponse.possible_diagnosis,
-      hasSymptoms: !!aiResponse.symptom_analysis,
-      hasAdvice: !!aiResponse.advice
-    });
-  },
-
-  updateMessage: (id: string, aiResponse: AIResponse) => {
-    set(state => ({
-      currentSession: state.currentSession.map(message =>
-        message.id === id ? { ...message, aiResponse } : message
-      )
-    }));
-
-    if (aiResponse.possible_diagnosis || aiResponse.symptom_analysis || aiResponse.advice) {
-      const analyticsStore = useAnalyticsStore.getState();
-      analyticsStore.fetchAnalyticsData();
-      console.log('📊 Analytics refreshed due to medical analysis');
-    }
-  },
-
-  clearCurrentSession: () => {
-    set({
+export const useChatStore = create<ChatStore>()(
+  persist(
+    (set, get) => ({
       currentSession: [],
-      currentSessionId: null
-    });
-    console.log('🗑️ Chat session cleared');
-  },
+      isLoading: false,
+      currentSessionId: null,
 
-  setCurrentSessionId: (sessionId: number | null) => {
-    set({ currentSessionId: sessionId });
-    console.log('📝 Session ID set:', sessionId);
-  },
+      addMessage: (
+        userMessage: string,
+        aiResponse: AIResponse,
+        symptoms: string,
+        patientContext: any,
+        messageId?: string
+      ) => {
+        const newMessage: ChatMessage = {
+          id: messageId || Date.now().toString(),
+          userMessage,
+          aiResponse,
+          timestamp: new Date().toISOString(),
+          patientContext
+        };
 
-  triggerAnalyticsRefresh: () => {
-    const analyticsStore = useAnalyticsStore.getState();
-    analyticsStore.fetchAnalyticsData();
-    console.log('📊 Manual analytics refresh triggered');
-  },
+        set(state => ({
+          currentSession: [...state.currentSession, newMessage]
+        }));
 
-  setLoading: (loading: boolean) => {
-    set({ isLoading: loading });
-  }
-}));
+        // Only trigger analytics for medical analysis responses (not simple conversations)
+        if (aiResponse.possible_diagnosis || aiResponse.symptom_analysis || aiResponse.advice) {
+          const analyticsStore = useAnalyticsStore.getState();
+          analyticsStore.fetchAnalyticsData();
+
+          console.log('📊 Analytics refreshed due to medical analysis');
+        }
+
+        // Log for debugging
+        console.log('💬 Chat message added:', {
+          userMessage,
+          hasDiagnosis: !!aiResponse.possible_diagnosis,
+          hasSymptoms: !!aiResponse.symptom_analysis,
+          hasAdvice: !!aiResponse.advice
+        });
+      },
+
+      updateMessage: (id: string, aiResponse: AIResponse) => {
+        set(state => ({
+          currentSession: state.currentSession.map(message =>
+            message.id === id ? { ...message, aiResponse } : message
+          )
+        }));
+
+        if (aiResponse.possible_diagnosis || aiResponse.symptom_analysis || aiResponse.advice) {
+          const analyticsStore = useAnalyticsStore.getState();
+          analyticsStore.fetchAnalyticsData();
+          console.log('📊 Analytics refreshed due to medical analysis');
+        }
+      },
+
+      clearCurrentSession: () => {
+        set({
+          currentSession: [],
+          currentSessionId: null
+        });
+        console.log('🗑️ Chat session cleared');
+      },
+
+      setCurrentSessionId: (sessionId: number | null) => {
+        set({ currentSessionId: sessionId });
+        console.log('📝 Session ID set:', sessionId);
+      },
+
+      triggerAnalyticsRefresh: () => {
+        const analyticsStore = useAnalyticsStore.getState();
+        analyticsStore.fetchAnalyticsData();
+        console.log('📊 Manual analytics refresh triggered');
+      },
+
+      setLoading: (loading: boolean) => {
+        set({ isLoading: loading });
+      }
+    }),
+    {
+      name: 'chat-store',
+      storage: createJSONStorage(() => AsyncStorage),
+      partialize: (state) => ({
+        currentSession: state.currentSession,
+        currentSessionId: state.currentSessionId
+      })
+    }
+  )
+);

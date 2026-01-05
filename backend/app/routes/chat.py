@@ -52,6 +52,7 @@ async def chat_endpoint(
     # FIX: Handle both string and dictionary responses
     print(f"🔍 DEBUG: conversational_response type: {type(conversational_response)}")
     print(f"🔍 DEBUG: conversational_response content: {conversational_response}")
+    should_offer_analysis = False
 
     if isinstance(conversational_response, str):
         try:

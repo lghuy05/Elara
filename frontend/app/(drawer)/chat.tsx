@@ -82,15 +82,26 @@ export default function ChatIntroScreen() {
     );
 
     try {
-      const response = await api.post(`/chat/${sessionId}/analyze`);
-      const analysisResult: AIResponse = response.data;
+      const analysisTimeoutMs = 45000;
+      const response = await Promise.race([
+        api.post(`/chat/${sessionId}/analyze`),
+        new Promise((_, reject) =>
+          setTimeout(
+            () => reject(new Error('Analysis timed out. Please try again.')),
+            analysisTimeoutMs
+          )
+        )
+      ]);
+      const analysisResult: AIResponse = (response as any).data;
 
       // Add analysis result as a new message
       updateMessage(pendingId, analysisResult);
 
     } catch (error: any) {
       console.error('Analysis API Error:', error);
-      updateMessage(pendingId, { error: 'Failed to analyze symptoms. Please try again.' });
+      updateMessage(pendingId, {
+        error: error?.message || 'Failed to analyze symptoms. Please try again.'
+      });
     } finally {
       setLoading(false);
     }

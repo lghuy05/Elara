@@ -1,11 +1,13 @@
 import pinecone
 import os
+from concurrent.futures import ThreadPoolExecutor, TimeoutError
 
 
 class PineconeService:
     def __init__(self):
         self.api_key = os.getenv("PINECONE_API_KEY")
         self.index_name = "medical-knowledge"
+        self.query_timeout_seconds = int(os.getenv("PINECONE_QUERY_TIMEOUT", "8"))
 
         try:
             # Initialize Pinecone with the new SDK
@@ -28,12 +30,22 @@ class PineconeService:
 
             print(f"🔍 Querying Pinecone for: {query}")
 
-            # Use search() for integrated embeddings
-            results = self.index.search(
-                namespace="medical-namespace",
-                query={"inputs": {"text": query}, "top_k": n_results},
-                fields=["text"],  # Specify which metadata fields to return
-            )
+            def run_search():
+                return self.index.search(
+                    namespace="medical-namespace",
+                    query={"inputs": {"text": query}, "top_k": n_results},
+                    fields=["text"],  # Specify which metadata fields to return
+                )
+
+            with ThreadPoolExecutor(max_workers=1) as executor:
+                future = executor.submit(run_search)
+                try:
+                    results = future.result(timeout=self.query_timeout_seconds)
+                except TimeoutError:
+                    print(
+                        f"⚠️ Pinecone query timed out after {self.query_timeout_seconds}s"
+                    )
+                    return {"documents": [[]], "metadatas": [[]], "distances": [[]]}
 
             # Format results to match your existing structure
             documents = []
