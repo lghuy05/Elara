@@ -158,11 +158,30 @@ async def analyze_chat_session(
 
     if not medical_context.get("symptoms"):
         # Fallback to full-conversation extraction if context is missing
-        medical_context = (
-            ConversationalAIService.extract_medical_context_from_conversation(
-                conversation_history
+        try:
+            medical_context = (
+                ConversationalAIService.extract_medical_context_from_conversation(
+                    conversation_history
+                )
             )
-        )
+        except Exception as e:
+            print(f"⚠️ Context extraction failed: {e}")
+            last_user = next(
+                (
+                    msg["content"]
+                    for msg in reversed(conversation_history)
+                    if msg["role"] == "user"
+                ),
+                "",
+            )
+            medical_context = {
+                "symptoms": last_user,
+                "duration": "",
+                "medications": [],
+                "conditions": [],
+                "age": 30,
+                "sex": None,
+            }
 
     print(f"🩺 Extracted Medical Context: {medical_context}")
 
@@ -211,6 +230,17 @@ async def analyze_chat_session(
         conditions=medical_context.get("conditions", []),
         duration=medical_context.get("duration"),
     )
+    if not symptom_input.symptoms:
+        fallback_result = build_fallback_analysis(symptom_input)
+        ChatService.add_message(
+            db,
+            session_id,
+            "assistant",
+            "I couldn't find enough symptom details to run a full analysis yet.",
+            "medical_advice",
+            {"analysis_data": fallback_result},
+        )
+        return EnhancedAdviceOutWithReminders(**fallback_result)
     # DEBUG: Print exactly what we're sending to EHR analysis
     print("🎯 SENDING TO EHR ANALYSIS:")
     print(f"  Age: {symptom_input.age}")
